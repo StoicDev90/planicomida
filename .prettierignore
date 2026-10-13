@@ -1,0 +1,4 @@
+.claude/
+.specs/
+.plans/
+package-lock.json
