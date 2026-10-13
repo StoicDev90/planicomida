@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+data/
+.env
+.env.*
+!.env.example
+coverage/
+.taste-skill/
+*.log
+.DS_Store
