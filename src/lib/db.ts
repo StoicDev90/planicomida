@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 
 export type Db = Database.Database;
 
+export const DEFAULT_DATABASE_PATH = './data/planicomida.db';
 const MIGRATIONS_DIR = resolve(process.cwd(), 'db/migrations');
 const MIGRATION_FILE = /^(\d{3})_.+\.sql$/;
 
@@ -73,6 +74,6 @@ let instance: Db | undefined;
 
 /** Conexión única del proceso, abierta (y migrada) en el primer uso. */
 export function getDb(): Db {
-  instance ??= openDb(process.env.DATABASE_PATH ?? './data/planicomida.db');
+  instance ??= openDb(process.env.DATABASE_PATH ?? DEFAULT_DATABASE_PATH);
   return instance;
 }
