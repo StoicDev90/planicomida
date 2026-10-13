@@ -1,0 +1,35 @@
+---
+import { Font } from 'astro:assets';
+import '@/styles/global.css';
+import NavBar from '@/components/NavBar.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = 'Planificá las comidas de la semana y llevá la lista del súper armada.',
+} = Astro.props;
+const user = Astro.locals.user;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <Font cssVariable="--font-imbue" preload />
+    <Font cssVariable="--font-albert" preload={[{ weight: '400' }]} />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+  </head>
+  <body class:list={['min-h-dvh', { 'pb-16 md:pb-0': user }]}>
+    {user && <NavBar />}
+    <slot />
+  </body>
+</html>

@@ -16,7 +16,8 @@ afterEach(() => opened.splice(0).forEach((db) => db.open && db.close()));
 
 function tempMigrationsDir(extra: Record<string, string> = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'pc-migrations-'));
-  for (const file of ['001_items.sql', '002_tags.sql']) copyFileSync(join(FIXTURES, file), join(dir, file));
+  for (const file of ['001_items.sql', '002_tags.sql'])
+    copyFileSync(join(FIXTURES, file), join(dir, file));
   for (const [file, sql] of Object.entries(extra)) writeFileSync(join(dir, file), sql);
   return dir;
 }

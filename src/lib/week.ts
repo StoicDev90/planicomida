@@ -19,10 +19,7 @@ function addDays(value: string, days: number): string {
 }
 
 /** Lunes (YYYY-MM-DD) de la semana que contiene `date`, según el calendario de `timeZone`. */
-export function weekStartOf(
-  date: Date,
-  timeZone = process.env.TZ ?? DEFAULT_TIME_ZONE,
-): string {
+export function weekStartOf(date: Date, timeZone = process.env.TZ ?? DEFAULT_TIME_ZONE): string {
   // en-CA formatea como YYYY-MM-DD
   const localDay = new Intl.DateTimeFormat('en-CA', { timeZone }).format(date);
   const daysSinceMonday = (parseDate(localDay).getUTCDay() + 6) % 7;

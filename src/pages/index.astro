@@ -1,15 +1,635 @@
 ---
-// Página temporal de T1: se reemplaza por la landing en T7.
-import '@/styles/global.css';
+import { Image } from 'astro:assets';
+import Layout from '@/layouts/Layout.astro';
+import TryList from '@/components/landing/TryList.astro';
+import credits from '@/assets/landing/credits.json';
+import verduleria from '@/assets/landing/verduleria.jpg';
+import feria from '@/assets/landing/feria.jpg';
+import guiso from '@/assets/landing/guiso.jpg';
+import chorizos from '@/assets/landing/chorizos.jpg';
+import facturas from '@/assets/landing/facturas.jpg';
+
+export const prerender = true;
+
+/** Borde dentado (corte de ticket) con clip-path. */
+function zigzag(teeth: number, depth: string, edges: 'bottom' | 'both') {
+  const step = 100 / teeth;
+  const bottom = Array.from({ length: teeth * 2 + 1 }, (_, i) => {
+    const x = 100 - (i * step) / 2;
+    return `${x}% ${i % 2 === 0 ? `calc(100% - ${depth})` : '100%'}`;
+  });
+  const top =
+    edges === 'both'
+      ? Array.from({ length: teeth * 2 + 1 }, (_, i) => {
+          const x = (i * step) / 2;
+          return `${x}% ${i % 2 === 0 ? depth : '0%'}`;
+        })
+      : ['0% 0%', '100% 0%'];
+  return `polygon(${[...top, ...bottom].join(', ')})`;
+}
+
+const slipEdge = zigzag(24, '14px', 'bottom');
+const sheetEdge = zigzag(28, '14px', 'both');
+
+const routine = [
+  {
+    when: 'Domingo',
+    rows: [
+      ['Elegís recetas', 'catálogo o propias'],
+      ['Las repartís en la semana', '28 comidas'],
+      ['¿Se repite? Copiás la anterior', 'un toque'],
+    ],
+  },
+  {
+    when: 'Lunes',
+    rows: [
+      ['La lista se arma sola', 'sumada'],
+      ['Sumás lo que no es receta', 'detergente, yerba'],
+    ],
+  },
+  {
+    when: 'En el súper',
+    rows: [
+      ['Recorrés góndola por góndola', 'en orden'],
+      ['Tachás lo que va al carrito', 'en el celu'],
+    ],
+  },
+];
+
+const menu = [
+  {
+    group: 'Planificar',
+    plate: { src: facturas, alt: 'Plato con facturas argentinas sobre un mantel rojo' },
+    items: [
+      [
+        'Cuatro comidas por día',
+        'desayuno a cena',
+        'Desayuno, almuerzo, snack y cena, de lunes a domingo.',
+      ],
+      [
+        'Comidas libres',
+        '“Delivery”, “Sobras”',
+        'Un turno puede ser solo texto: no suma ingredientes.',
+      ],
+      ['Historial', 'todas las semanas', 'Volvés a cualquier semana y la copiás en la actual.'],
+    ],
+  },
+  {
+    group: 'Recetas',
+    plate: {
+      src: guiso,
+      alt: 'Plato hondo de guiso de lentejas con chorizo, pan y limón en la mesa',
+    },
+    items: [
+      ['Catálogo casero', 'incluido', 'Milanesas, guiso, tarta de verdura, fideos con tuco y más.'],
+      ['Tus recetas', 'editables', 'Con ingredientes, cantidades y la góndola de cada uno.'],
+      [
+        'Para 1 persona',
+        'vos multiplicás',
+        'Las cantidades son por persona. Si comen tres, por tres.',
+      ],
+    ],
+  },
+  {
+    group: 'Comprar',
+    plate: { src: chorizos, alt: 'Chorizos frescos en la heladera de una carnicería' },
+    items: [
+      ['Sin repetidos', 'sumado', 'Si dos recetas piden cebolla, aparece una vez con el total.'],
+      ['Por góndola', 'en orden', 'Verdulería, Carnicería, Lácteos, Panadería, Almacén.'],
+      ['Cosas sueltas', 'a mano', 'Detergente, papel, yerba: lo que no sale de una receta.'],
+      ['Para tachar', 'en el súper', 'Tocás y se tacha. Queda guardado en ese celular.'],
+      ['Para mandar', 'por WhatsApp', 'Copiás la lista como texto y la compartís.'],
+    ],
+  },
+];
+
+const faq = [
+  [
+    '¿Tengo que instalar algo?',
+    'No. Es una página web: la abrís desde el navegador del celular o de la compu.',
+  ],
+  [
+    '¿Necesito una cuenta?',
+    'Sí, con email y contraseña. Tus recetas, tus semanas y tus listas son solo tuyas.',
+  ],
+  [
+    '¿Para cuántas personas son las cantidades?',
+    'Para una. Si comen tres, multiplicás por tres; la app no lo calcula por vos.',
+  ],
+  [
+    '¿Puedo cargar mis propias recetas?',
+    'Sí, con sus ingredientes, la cantidad de cada uno y la góndola donde se compra.',
+  ],
+  [
+    '¿Qué pasa si el tomate está en dos recetas?',
+    'Aparece una sola vez en la lista, con las cantidades sumadas. Si una pide kilos y otra gramos, también se suman.',
+  ],
+  [
+    '¿Y si un día como afuera?',
+    'Escribís “Delivery” o lo que sea en ese turno. Queda en el plan y no agrega nada a la lista.',
+  ],
+  [
+    '¿Se guardan las semanas pasadas?',
+    'Sí. Podés volver a cualquier semana, verla tal como la armaste y copiarla en la actual.',
+  ],
+  [
+    '¿Puedo sumar cosas que no son comida?',
+    'Sí. La lista acepta ítems sueltos, como detergente o papel higiénico, en la góndola que elijas.',
+  ],
+  [
+    '¿Lo que tacho se ve en otro celular?',
+    'No. Lo tachado queda guardado en el dispositivo donde lo marcaste.',
+  ],
+];
+
+const sectionLinks = [
+  ['#como', 'Cómo funciona'],
+  ['#proba', 'Probá la suma'],
+  ['#preguntas', 'Preguntas'],
+];
 ---
 
-<html lang="es-AR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PlaniComida</title>
-  </head>
-  <body class="grid min-h-dvh place-items-center bg-emerald-50 p-4">
-    <h1 class="text-3xl font-bold text-emerald-800">PlaniComida</h1>
-  </body>
-</html>
+<Layout
+  title="PlaniComida: la semana resuelta"
+  description="Elegís qué comés cada día y PlaniComida arma la lista del súper, sumada y ordenada por góndola."
+>
+  <main class="bg-paper">
+    <!-- Hero: la lista del súper, en papel, sobre la verdulería -->
+    <section class="hero relative overflow-hidden bg-field" aria-labelledby="hero-title">
+      <div class="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <Image
+          src={verduleria}
+          alt=""
+          widths={[480, 800, 1280]}
+          sizes="100vw"
+          quality={55}
+          loading="eager"
+          fetchpriority="high"
+          class="hero-photo h-full w-full object-cover"
+        />
+      </div>
+      <div class="scrim absolute inset-x-0 top-0 h-44" aria-hidden="true"></div>
+
+      <header class="relative z-10 flex h-[72px] items-center justify-between px-3 text-field-ink md:h-24 md:px-7">
+        <a href="/" class="font-display text-lead leading-none uppercase">
+          PlaniComida
+        </a>
+        <nav aria-label="Secciones" class="hidden gap-8 lg:flex">
+          {sectionLinks.map(([href, label]) => (
+            <a href={href} class="link">
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div class="flex items-center gap-5">
+          <a href="/login" class="link hidden sm:inline">
+            Ingresar
+          </a>
+          <a href="/registro" class="btn">
+            Crear cuenta
+          </a>
+        </div>
+      </header>
+
+      <div class="relative z-10 px-3 pt-6 pb-16 md:px-7 md:pt-[94px] md:pb-28">
+        <article class="card mx-auto w-full max-w-[640px] bg-paper px-6 pt-12 pb-14 text-center md:px-14 md:pt-16">
+          <h1 id="hero-title" class="lines font-display text-display leading-[0.9] uppercase">
+            <span class="line md:pr-[16%]">
+              <span data-line style="--i:0">
+                La semana
+              </span>
+            </span>
+            <span class="line md:pl-[22%]">
+              <span data-line style="--i:1">
+                resuelta
+              </span>
+            </span>
+          </h1>
+          <p class="mx-auto mt-8 max-w-[30ch] text-lead leading-snug" data-rise style="--i:2">
+            Elegís qué comés cada día. PlaniComida suma los ingredientes y arma la lista del súper,
+            ordenada por góndola.
+          </p>
+          <p
+            class="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-small"
+            data-rise
+            style="--i:3"
+          >
+            <span>Desayuno, almuerzo, snack y cena</span>
+            <span class="diamond" aria-hidden="true"></span>
+            <span>En el celular y en la compu</span>
+          </p>
+
+          <!-- La parte de abajo de la hoja: así queda una lista -->
+          <dl class="mx-auto mt-16 max-w-[36ch] space-y-3 text-left" aria-label="Ejemplo de lista">
+            <div>
+              <dt class="font-semibold">Verdulería</dt>
+              <dd>tomate, cebolla, papa, acelga</dd>
+            </div>
+            <div>
+              <dt class="font-semibold">Carnicería</dt>
+              <dd>nalga para milanesa, chorizo colorado</dd>
+            </div>
+            <div>
+              <dt class="font-semibold">Lácteos</dt>
+              <dd>queso cremoso, leche, queso rallado</dd>
+            </div>
+            <div>
+              <dt class="font-semibold">Almacén</dt>
+              <dd>fideos, huevos, pan rallado, lentejas</dd>
+            </div>
+          </dl>
+          <p class="mt-10">
+            <a href="#proba" class="link font-medium text-accent">
+              Probá cómo se arma
+            </a>
+          </p>
+          <nav
+            aria-label="Secciones"
+            class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 lg:hidden"
+          >
+            {sectionLinks.map(([href, label]) => (
+              <a href={href} class="link">
+                {label}
+              </a>
+            ))}
+          </nav>
+        </article>
+      </div>
+    </section>
+
+    <!-- Cómo funciona: la rutina impresa como un ticket -->
+    <section id="como" class="bg-field text-field-ink" aria-labelledby="como-title">
+      <div class="mx-auto grid max-w-6xl gap-12 px-4 py-28 lg:grid-cols-12 md:px-6 md:py-44">
+        <div class="lg:col-span-5">
+          <h2
+            id="como-title"
+            class="font-display text-head leading-[0.95] uppercase"
+            data-reveal
+            style="--i:0"
+          >
+            Del domingo al súper
+          </h2>
+          <p class="mt-6 max-w-[30ch]" data-reveal style="--i:1">
+            Se planifica una vez por semana y se compra una sola vez. La rutina entra en un ticket.
+          </p>
+        </div>
+        <div class="lg:col-span-5 lg:col-start-7" data-reveal style="--i:2">
+          <div
+            class="slip max-w-[480px] bg-paper px-6 pt-4 pb-12 text-ink md:px-8"
+            style={`clip-path: ${slipEdge}`}
+          >
+            {routine.map(({ when, rows }) => (
+              <div class="pt-7">
+                <h3 class="font-semibold">{when}</h3>
+                <ul class="mt-2 space-y-1.5">
+                  {rows.map(([what, value]) => (
+                    <li class="flex items-baseline gap-2">
+                      <span>{what}</span>
+                      <span class="leader" aria-hidden="true" />
+                      <span class="shrink-0 text-right whitespace-nowrap tabular-nums">
+                        {value}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <p class="-mx-6 mt-8 flex h-11 items-center justify-between bg-ink px-6 text-paper md:-mx-8 md:px-8">
+              <span class="font-medium">Semana resuelta</span>
+              <span>una sola compra</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <TryList />
+
+    <!-- Lo que trae: el menú, sobre una feria de verduras -->
+    <section id="que-trae" class="relative overflow-hidden bg-field" aria-labelledby="trae-title">
+      <div class="absolute inset-0" aria-hidden="true">
+        <Image
+          src={feria}
+          alt=""
+          widths={[480, 800, 1280]}
+          sizes="100vw"
+          quality={55}
+          class="h-full w-full object-cover"
+        />
+      </div>
+      <div class="relative px-3 py-24 md:py-40">
+        <div
+          class="sheet mx-auto max-w-[600px] bg-paper px-5 py-16 md:px-12 md:py-20"
+          style={`clip-path: ${sheetEdge}`}
+        >
+          <h2
+            id="trae-title"
+            class="text-center font-display text-head leading-[0.95] uppercase"
+            data-reveal
+            style="--i:0"
+          >
+            Lo que trae
+          </h2>
+          {menu.map(({ group, plate, items }, g) => (
+            <div class="mt-11" data-reveal style={`--i:${g + 1}`}>
+              <Image
+                src={plate.src}
+                alt={plate.alt}
+                widths={[400, 800]}
+                sizes="(min-width: 768px) 504px, 92vw"
+                quality={60}
+                class="plate aspect-[3/1] w-full object-cover"
+              />
+              <h3 class="mt-5 text-lead font-semibold">{group}</h3>
+              <ul class="mt-3 space-y-4">
+                {items.map(([name, value, desc]) => (
+                  <li>
+                    <p class="flex items-baseline gap-2">
+                      <span class="font-medium">{name}</span>
+                      <span class="leader" aria-hidden="true" />
+                      <span class="shrink-0 text-right whitespace-nowrap">{value}</span>
+                    </p>
+                    <p class="max-w-[38ch] text-small text-muted">{desc}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Preguntas: texto corrido, todo a la vista -->
+    <section id="preguntas" class="bg-paper" aria-labelledby="faq-title">
+      <div class="mx-auto grid max-w-6xl gap-8 px-4 py-28 lg:grid-cols-12 md:px-6 md:py-44">
+        <h2
+          id="faq-title"
+          class="font-display text-head leading-[0.95] uppercase lg:col-span-4"
+          data-reveal
+          style="--i:0"
+        >
+          Preguntas
+        </h2>
+        <div class="faq lg:col-span-8" data-reveal style="--i:1">
+          {faq.map(([q, a]) => (
+            <p>
+              <strong class="font-semibold">{q}</strong> {a}
+            </p>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Cierre: una frase con un espacio para completar -->
+    <section class="bg-surface" aria-labelledby="cta-title">
+      <div class="mx-auto max-w-6xl px-4 py-28 md:px-6 md:py-44">
+        <h2
+          id="cta-title"
+          class="font-display text-head leading-[0.95] uppercase"
+          data-reveal
+          style="--i:0"
+        >
+          Tu primera semana
+          <br />
+          empieza acá
+        </h2>
+        <form
+          action="/registro"
+          method="get"
+          class="cta-form mt-10 text-lead"
+          data-reveal
+          style="--i:1"
+        >
+          <label for="cta-email">Mi email es</label>
+          <input
+            id="cta-email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+            placeholder="vos@mail.com"
+            class="blank"
+          />
+          <button type="submit" class="btn text-lead">
+            Empezar
+          </button>
+        </form>
+        <p class="mt-5 text-muted" data-reveal style="--i:2">
+          Te llevamos a crear la cuenta con ese email. Después elegís una contraseña.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Pie: el dorso de la hoja -->
+  <footer class="bg-field text-field-ink">
+    <div class="mx-auto max-w-6xl px-4 pt-14 pb-8 md:px-6 md:pt-20">
+      <p class="wordmark font-display leading-[0.8] uppercase" aria-hidden="true">
+        PlaniComida
+      </p>
+      <div class="mt-14 grid gap-12 lg:grid-cols-12">
+        <ul class="space-y-2 text-lead lg:col-span-5">
+          <li>
+            <a href="/registro" class="link">
+              Crear cuenta
+            </a>
+          </li>
+          <li>
+            <a href="/login" class="link">
+              Ingresar
+            </a>
+          </li>
+        </ul>
+        <div class="grid gap-10 text-small sm:grid-cols-2 lg:col-span-7">
+          <ul class="space-y-2">
+            {sectionLinks.map(([href, label]) => (
+              <li>
+                <a href={href} class="link">
+                  {label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href="#que-trae" class="link">
+                Lo que trae
+              </a>
+            </li>
+          </ul>
+          <div>
+            <p class="font-medium">Fotos</p>
+            <ul class="mt-2 space-y-1.5">
+              {credits.map((c) => (
+                <li>
+                  <a href={c.page} class="link" rel="noopener">
+                    {c.title.split(' (')[0].split(',')[0]}
+                  </a>
+                  , {c.creator},{' '}
+                  <a href={c.licenseUrl} class="link" rel="license noopener">
+                    {c.license}
+                  </a>
+                  , vía Wikimedia Commons
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="mt-16 flex justify-between text-small">
+        <p>PlaniComida, 2026</p>
+        <a href="#" class="link">
+          Volver arriba
+        </a>
+      </div>
+    </div>
+  </footer>
+</Layout>
+
+<style>
+  .scrim {
+    background: linear-gradient(
+      rgb(0 0 0 / 0.6),
+      rgb(0 0 0 / 0)
+    ); /* taste-skill-ignore: scrim neutro sobre foto */
+  }
+  .card {
+    border-radius: 36px;
+  }
+  @supports (corner-shape: scoop) {
+    .card {
+      corner-shape: scoop;
+    }
+  }
+  .diamond {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    transform: rotate(45deg);
+  }
+  .leader {
+    flex: 1;
+    min-width: 1rem;
+    border-bottom: 4px dotted color-mix(in srgb, var(--color-ink) 45%, transparent);
+    transform: translateY(-0.3em);
+  }
+  @media (min-width: 1024px) {
+    .faq {
+      columns: 2;
+      column-gap: 56px;
+    }
+  }
+  .faq p {
+    break-inside: avoid;
+    margin-bottom: 20px;
+  }
+  .cta-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em 0.6em;
+  }
+  .blank {
+    width: 11em;
+    max-width: 100%;
+    height: 1.9em;
+    padding: 0 0.4em;
+    background: var(--color-paper);
+    font: inherit;
+  }
+  .blank::placeholder {
+    color: var(--color-muted);
+  }
+  .wordmark {
+    font-size: min(23vw, 18rem);
+    white-space: nowrap;
+  }
+  @media (max-width: 767px) {
+    .blank {
+      width: 100%;
+    }
+  }
+
+  /* Movimiento: titular que sube desde su renglón, entradas por sección, foto que respira. */
+  .lines .line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+    margin-bottom: -0.08em;
+  }
+  .lines [data-line] {
+    display: block;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .lines [data-line] {
+      translate: 0 105%;
+      animation: line-up 900ms var(--ease-out) forwards;
+      animation-delay: calc(var(--i) * 110ms + 150ms);
+    }
+    :global(.js) [data-rise] {
+      opacity: 0;
+      translate: 0 18px;
+      animation: rise 800ms var(--ease-out) forwards;
+      animation-delay: calc(var(--i, 0) * 90ms + 300ms);
+    }
+    .hero-photo {
+      animation: breathe 24s var(--ease-soft) infinite alternate;
+    }
+    .plate {
+      transition: scale 600ms var(--ease-out);
+    }
+    .plate:hover {
+      scale: 1.03;
+    }
+  }
+  @keyframes line-up {
+    to {
+      translate: 0 0;
+    }
+  }
+  @keyframes rise {
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @keyframes breathe {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: 1.08;
+    }
+  }
+</style>
+
+<style is:global>
+  @media (prefers-reduced-motion: no-preference) {
+    .js [data-reveal] {
+      opacity: 0;
+      translate: 0 24px;
+      transition:
+        opacity 700ms var(--ease-out),
+        translate 900ms var(--ease-out);
+      transition-delay: calc(var(--i, 0) * 80ms);
+    }
+    .js [data-reveal].is-in {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+</style>
+
+<script>
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
+        }
+      }
+    },
+    { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+  );
+  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+</script>

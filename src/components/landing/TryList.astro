@@ -1,0 +1,220 @@
+---
+// Lo que se puede probar en la landing: elegís platos y la lista se arma sumada, por góndola.
+// Sin JS se ve la "Semana clásica" ya armada.
+import { buildList, DEFAULT_SELECTION, DISHES, PRESETS } from './sample-week';
+
+const initial = buildList(DEFAULT_SELECTION);
+---
+
+<section id="proba" class="try bg-paper" aria-labelledby="try-title">
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-24 md:min-h-[88svh] lg:grid-cols-2 lg:items-center md:gap-16 md:px-6 md:py-40">
+    <!-- La lista: fragmento real de la interfaz -->
+    <div data-ui data-reveal style="--i:2" class="order-2 lg:order-1">
+      <div class="bg-surface p-6 lg:min-h-[min(560px,80svh)] md:p-10" aria-live="polite">
+        <p class="flex justify-between text-small text-muted">
+          <span>Lista del súper</span>
+          <span data-count>{DEFAULT_SELECTION.length} platos</span>
+        </p>
+        <div data-list class="mt-6 space-y-6">
+          {initial.map((group) => (
+            <div>
+              <h3 class="text-small font-semibold">{group.aisle}</h3>
+              <ul class="mt-2 space-y-1.5">
+                {group.lines.map((line) => (
+                  <li class="flex items-baseline gap-2">
+                    <span>{line.name}</span>
+                    <span class="leader" aria-hidden="true" />
+                    <span class="shrink-0 whitespace-nowrap tabular-nums">{line.amount}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p class="mt-8 text-small text-muted">Cantidades para 1 persona.</p>
+      </div>
+    </div>
+
+    <!-- Los controles -->
+    <div class="order-1 flex flex-col gap-10 lg:order-2 lg:min-h-full lg:justify-between">
+      <div
+        role="group"
+        aria-label="Semanas de ejemplo"
+        class="flex gap-6 text-body"
+        data-reveal
+        style="--i:0"
+      >
+        {PRESETS.map((preset, i) => (
+          <button
+            type="button"
+            data-preset={preset.dishes.join(',')}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="preset cursor-pointer py-2 font-medium"
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+
+      <div data-reveal style="--i:1">
+        <h2 id="try-title" class="font-display text-head leading-[0.95] uppercase">
+          Probá la suma
+        </h2>
+        <p class="mt-6 max-w-[34ch]">
+          Marcá lo que comerías esta semana. Si el tomate está en el tuco y en la ensalada, va una
+          sola vez a la lista, sumado.
+        </p>
+        <fieldset class="mt-8">
+          <legend class="sr-only">Platos de la semana</legend>
+          <ul class="grid gap-x-6 sm:grid-cols-2">
+            {DISHES.map((dish) => (
+              <li>
+                <label class="dish flex min-h-12 cursor-pointer items-center gap-3 py-1">
+                  <input
+                    type="checkbox"
+                    name="dish"
+                    value={dish.id}
+                    checked={DEFAULT_SELECTION.includes(dish.id)}
+                    class="size-5 shrink-0 accent-accent"
+                  />
+                  <span>
+                    <span class="block font-medium">{dish.name}</span>
+                    <span class="block text-small text-muted">{dish.meal}</span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </fieldset>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2" data-reveal style="--i:3">
+        <a href="/registro" class="cell bg-ink text-paper">
+          Crear cuenta
+        </a>
+        <a href="#que-trae" class="cell bg-surface text-ink">
+          Ver qué trae
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  #proba .leader {
+    flex: 1;
+    min-width: 1rem;
+    border-bottom: 4px dotted color-mix(in srgb, var(--color-ink) 45%, transparent);
+    transform: translateY(-0.3em);
+  }
+  #proba .preset {
+    color: var(--color-muted);
+    transition: color 180ms ease;
+  }
+  #proba .preset[aria-pressed='true'] {
+    color: var(--color-ink);
+    text-decoration: underline 3px;
+    text-underline-offset: 0.35em;
+  }
+  #proba .preset:hover {
+    color: var(--color-ink);
+  }
+  #proba .dish:hover {
+    color: var(--color-accent);
+  }
+  #proba .cell {
+    display: flex;
+    align-items: center;
+    min-height: 72px;
+    padding: 0 1.5rem;
+    font-weight: 500;
+    transition:
+      transform 140ms var(--ease-out),
+      background-color 180ms ease;
+  }
+  #proba .cell:active {
+    transform: scale(0.98);
+  }
+  #proba .cell:hover {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+  @media (max-width: 767px) {
+    #proba .cell {
+      min-height: 60px;
+    }
+  }
+  #proba [data-list] li {
+    animation: line-in 420ms var(--ease-out) both;
+  }
+  @keyframes line-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #proba [data-list] li {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { buildList } from './sample-week';
+
+  const root = document.querySelector<HTMLElement>('#proba')!;
+  const boxes = [...root.querySelectorAll<HTMLInputElement>('input[name="dish"]')];
+  const presets = [...root.querySelectorAll<HTMLButtonElement>('[data-preset]')];
+  const list = root.querySelector<HTMLElement>('[data-list]')!;
+  const count = root.querySelector<HTMLElement>('[data-count]')!;
+
+  function render() {
+    const selected = boxes.filter((b) => b.checked).map((b) => b.value);
+    count.textContent = `${selected.length} ${selected.length === 1 ? 'plato' : 'platos'}`;
+    const groups = buildList(selected);
+    list.replaceChildren(
+      ...(groups.length === 0
+        ? [Object.assign(document.createElement('p'), { textContent: 'Marcá algún plato.' })]
+        : groups.map((group) => {
+            const wrap = document.createElement('div');
+            const title = Object.assign(document.createElement('h3'), {
+              className: 'text-small font-semibold',
+              textContent: group.aisle,
+            });
+            const ul = Object.assign(document.createElement('ul'), {
+              className: 'mt-2 space-y-1.5',
+            });
+            group.lines.forEach((line, i) => {
+              const li = document.createElement('li');
+              li.className = 'flex items-baseline gap-2';
+              li.style.animationDelay = `${i * 40}ms`;
+              const leader = Object.assign(document.createElement('span'), { className: 'leader' });
+              leader.setAttribute('aria-hidden', 'true');
+              li.append(
+                Object.assign(document.createElement('span'), { textContent: line.name }),
+                leader,
+                Object.assign(document.createElement('span'), {
+                  className: 'shrink-0 whitespace-nowrap tabular-nums',
+                  textContent: line.amount,
+                }),
+              );
+              ul.append(li);
+            });
+            wrap.append(title, ul);
+            return wrap;
+          })),
+    );
+    const key = selected.join(',');
+    presets.forEach((p) => p.setAttribute('aria-pressed', String(p.dataset.preset === key)));
+  }
+
+  boxes.forEach((box) => box.addEventListener('change', render));
+  presets.forEach((preset) =>
+    preset.addEventListener('click', () => {
+      const ids = preset.dataset.preset!.split(',');
+      boxes.forEach((b) => (b.checked = ids.includes(b.value)));
+      render();
+    }),
+  );
+</script>

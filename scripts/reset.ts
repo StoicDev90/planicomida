@@ -13,5 +13,7 @@ console.log(`Base borrada: ${path}`);
 
 const db = getDb();
 runSeed(db);
-console.log(`Base recreada (schema v${schemaVersion(db)}). Si npm run dev está corriendo, reinicialo.`);
+console.log(
+  `Base recreada (schema v${schemaVersion(db)}). Si npm run dev está corriendo, reinicialo.`,
+);
 db.close();

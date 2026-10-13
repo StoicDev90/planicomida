@@ -1,0 +1,52 @@
+---
+// Navegación de la app (solo con sesión): barra inferior fija en el celular, barra superior en md+.
+const links = [
+  { href: '/app/planner', label: 'Planner' },
+  { href: '/app/recetas', label: 'Recetas' },
+  { href: '/app/lista', label: 'Lista' },
+];
+const current = Astro.url.pathname;
+---
+
+<header class="bg-paper md:sticky md:top-0 md:z-20 md:bg-field md:text-field-ink">
+  <nav
+    aria-label="Principal"
+    class="mx-auto flex max-w-6xl items-center justify-between px-4 md:h-16 md:px-6"
+  >
+    <a href="/app/planner" class="hidden font-display text-lead uppercase md:block">
+      PlaniComida
+    </a>
+
+    <ul class="fixed inset-x-0 bottom-0 z-20 grid h-16 grid-cols-4 bg-field text-field-ink md:static md:flex md:h-auto md:gap-8 md:bg-transparent">
+      {links.map(({ href, label }) => {
+        const active = current.startsWith(href);
+        return (
+          <li class="flex">
+            <a
+              href={href}
+              aria-current={active ? 'page' : undefined}
+              class:list={[
+                'flex min-h-11 flex-1 items-center justify-center px-2 text-small font-medium transition-colors md:text-body',
+                active
+                  ? 'bg-paper text-ink md:bg-transparent md:text-field-ink md:underline md:decoration-2 md:underline-offset-8'
+                  : 'hover:bg-white/10 md:hover:bg-transparent md:hover:underline md:hover:decoration-2 md:hover:underline-offset-8',
+              ]}
+            >
+              {label}
+            </a>
+          </li>
+        );
+      })}
+      <li class="flex">
+        <form method="post" action="/api/auth/logout" class="flex flex-1">
+          <button
+            type="submit"
+            class="flex min-h-11 flex-1 cursor-pointer items-center justify-center px-2 text-small font-medium transition-colors hover:bg-white/10 md:text-body md:hover:bg-transparent md:hover:underline md:hover:decoration-2 md:hover:underline-offset-8"
+          >
+            Salir
+          </button>
+        </form>
+      </li>
+    </ul>
+  </nav>
+</header>
