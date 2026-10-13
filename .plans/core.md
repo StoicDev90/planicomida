@@ -1,6 +1,6 @@
 # Plan: core
 
-> Spec: `.specs/SPEC-core.md` (aprobada 2026-10-13) · Estado: **APROBADO (2026-10-13) — en ejecución**
+> Spec: `.specs/SPEC-core.md` (aprobada 2026-10-13) · Estado: **TERMINADO (2026-10-13)**
 > Siguiente módulo después de este: `identity`.
 
 ## Alcance
@@ -33,7 +33,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
 
 ## Tareas
 
-- [ ] **T1 — Scaffold del proyecto**
+- [x] **T1 — Scaffold del proyecto**
   - Qué: `package.json` con scripts (`dev`, `build`, `test`, `test:watch`, `check`, `format`, `db:seed`, `db:reset`) y `engines.node >=22.12`.
     `astro.config.mjs` con `output: 'server'`, `adapter: node({ mode: 'standalone' })` y `vite.plugins: [tailwindcss()]`.
     `tsconfig.json` que extiende `astro/tsconfigs/strict` y define el alias `@/*` → `src/*`. `src/styles/global.css` con `@import "tailwindcss"`.
@@ -42,14 +42,14 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
   - Verify: `npm run dev` + `curl -s -o /dev/null -w '%{http_code}' localhost:4321` → `200`; `npm run build` y `npm run check` sin errores.
   - Files: `package.json`, `astro.config.mjs`, `tsconfig.json`, `src/styles/global.css`, `.gitignore`, `.env.example`, `.prettierrc`
 
-- [ ] **T2 — Setup de Vitest**
+- [x] **T2 — Setup de Vitest**
   - Qué: `vitest.config.ts` con `getViteConfig` de `astro/config` (así toma el alias `@/` y la config de Astro); `environment: 'node'`; cobertura v8.
     Un test humo `tests/smoke.test.ts`.
   - Acceptance: `npm test` corre y pasa; `npx vitest run --coverage` genera el reporte.
   - Verify: `npm test`
   - Files: `vitest.config.ts`, `tests/smoke.test.ts`, `package.json`
 
-- [ ] **T3 — `src/lib/week.ts` (con TDD)**
+- [x] **T3 — `src/lib/week.ts` (con TDD)**
   - Qué: funciones puras:
     - `weekStartOf(date: Date, timeZone = process.env.TZ ?? 'America/Argentina/Buenos_Aires'): string` (devuelve `YYYY-MM-DD` del lunes).
     - `addWeeks(weekStart, n): string`.
@@ -65,7 +65,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
   - Verify: `npx vitest run tests/lib/week.test.ts --coverage`
   - Files: `src/lib/week.ts`, `tests/lib/week.test.ts`
 
-- [ ] **T4 — `src/lib/db.ts` + runner de migraciones**
+- [x] **T4 — `src/lib/db.ts` + runner de migraciones**
   - Qué:
     - `openDb(path, migrationsDir = 'db/migrations')`: abre `better-sqlite3` y aplica los pragmas (`journal_mode = WAL` salvo en `:memory:`, `foreign_keys = ON`).
       Después corre las migraciones `NNN_*.sql` con número mayor que `user_version`, ordenadas y cada una en su propia transacción, y actualiza `user_version`.
@@ -82,7 +82,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
   - Verify: `npx vitest run tests/lib/db.test.ts`
   - Files: `src/lib/db.ts`, `db/migrations/.gitkeep`, `tests/lib/db.test.ts`, `tests/fixtures/migrations/*.sql`
 
-- [ ] **T5 — `src/lib/http.ts`, middleware de errores y `/api/health`**
+- [x] **T5 — `src/lib/http.ts`, middleware de errores y `/api/health`**
   - Qué:
     - `json(data, status = 200)` y `errorResponse(status, code, message, fields?)`.
     - `parseBody(request, schema)`, que devuelve `{ ok: true, data }` o `{ ok: false, response }`. Un JSON inválido o un body que no pasa zod da 400 `VALIDATION`, con `fields` sacados de los issues de zod.
@@ -94,7 +94,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
   - Verify: `npx vitest run tests/lib/http.test.ts tests/api/health.test.ts`; `curl localhost:4321/api/health`
   - Files: `src/lib/http.ts`, `src/middleware.ts`, `src/pages/api/health.ts`, `tests/lib/http.test.ts`, `tests/api/health.test.ts`
 
-- [ ] **T6 — Scripts `db:seed` y `db:reset`**
+- [x] **T6 — Scripts `db:seed` y `db:reset`**
   - Qué:
     - `scripts/seed.ts`: abre la base (con lo que migra) y ejecuta `db/seed.sql` si existe. Si no existe, avisa y termina con código 0. El contenido del seed lo agrega `recipes`.
     - `scripts/reset.ts`: borra el archivo `.db` (y sus `-wal` / `-shm`), migra y siembra. Se niega a correr si `NODE_ENV=production`.
@@ -103,7 +103,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
   - Verify: correr los dos comandos y `curl localhost:4321/api/health`
   - Files: `scripts/seed.ts`, `scripts/reset.ts`, `package.json`
 
-- [ ] **T7 — Layout y landing**
+- [x] **T7 — Layout y landing**
   - Qué:
     - `src/layouts/Layout.astro`: `<html lang="es-AR">`, meta viewport, título por página, estilos globales.
       Navegación responsive: barra inferior fija en el celular y barra superior en `md+`. Contenido en `max-w-6xl` centrado. Estados `hover` y `focus-visible`.
@@ -118,7 +118,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
   - Verify: capturas a 360, 768 y 1280 px + Lighthouse en mobile y desktop; `npm run check`
   - Files: `src/layouts/Layout.astro`, `src/components/NavBar.astro`, `src/pages/index.astro`
 
-- [ ] **T8 — Checkpoint final de `core`**
+- [x] **T8 — Checkpoint final de `core`**
   - Acceptance: todos los Success Criteria de `SPEC-core.md`:
     - Borrar `node_modules` y `data/`, después `npm install && npm run dev` → crea la base y responde.
     - `npm test`, `npm run check` y `npm run build` sin errores.

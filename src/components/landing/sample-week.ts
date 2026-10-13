@@ -106,12 +106,10 @@ export interface ListLine {
   sources: number;
 }
 
-const numberFormat = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
-
+// Con estos platos ninguna suma llega a 1000 g o 1000 ml, así que no hace falta pasar a kg o l.
 function formatAmount(qty: number, unit: Unit): string {
   if (unit === 'unidad') return qty === 1 ? '1 unidad' : `${qty} unidades`;
-  if (qty >= 1000) return `${numberFormat.format(qty / 1000)} ${unit === 'g' ? 'kg' : 'l'}`;
-  return `${numberFormat.format(qty)} ${unit}`;
+  return `${qty} ${unit}`;
 }
 
 /** Suma por nombre + unidad y agrupa por góndola, en el orden del recorrido del súper. */
