@@ -58,7 +58,7 @@ planicomida/
 ├── src/
 │   ├── middleware.ts          → resuelve sesión → locals.user; protege /app/** y /api/**
 │   ├── lib/
-│   │   ├── db.ts              → singleton better-sqlite3 + runner de migraciones (PRAGMA user_version)
+│   │   ├── db.ts              → getDb() (conexión única, perezosa) + runner de migraciones (PRAGMA user_version)
 │   │   ├── http.ts            → json(), errorResponse(), parseBody()
 │   │   └── week.ts            → weekStartOf(date), addWeeks(), validación de YYYY-MM-DD lunes
 │   ├── services/              → lógica de dominio pura: reciben `db` + argumentos, sin Request/Response
@@ -112,7 +112,7 @@ Alias de imports: `@/*` → `src/*` (en `tsconfig.json`).
 // src/pages/api/plan/[week]/[day]/[meal].ts
 import type { APIRoute } from 'astro';
 import { z } from 'astro/zod';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { errorResponse, json, parseBody } from '@/lib/http';
 import { SlotParams, setMeal } from '@/services/plan';
 
@@ -128,7 +128,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   const body = await parseBody(request, Body);
   if (!body.ok) return body.response;
 
-  const entry = setMeal(db, locals.user!.id, slot.data, body.data);
+  const entry = setMeal(getDb(), locals.user!.id, slot.data, body.data);
   return json(entry);
 };
 ```
