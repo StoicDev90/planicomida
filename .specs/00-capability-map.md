@@ -25,8 +25,9 @@ las comidas de cada semana (desayuno, almuerzo, snack y cena) y generar la lista
   y aplican a todos los módulos.
 
 ## Flujo por módulo
-Specify → Plan → Tasks → Implement. Los planes y tareas de cada módulo se guardan en
-`.plans/<module-id>.md` una vez aprobada su spec.
+Specify → Plan → Tasks → Implement. Cada módulo tiene su carpeta `.plans/NN-<module-id>/` con un `PLAN.md`
+(plan maestro) y una tarea por archivo (`ID-01-….md`, `RC-01-….md`…), pensadas para subagentes.
+El índice y el protocolo de ejecución están en `.plans/README.md`.
 
 ## Registro de decisiones
 | Fecha | Decisión | Afecta |
