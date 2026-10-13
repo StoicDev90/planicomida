@@ -55,7 +55,7 @@ T1 scaffold ──┬── T2 vitest ──┬── T3 week.ts
     - `addWeeks(weekStart, n): string`.
     - `isWeekStart(value): boolean` (fecha real con formato `YYYY-MM-DD` que cae en lunes).
     - `WeekStart`: esquema zod que usa `isWeekStart`.
-    - `formatDayLabel(weekStart, day)`: devuelve "lun 13 oct" en `es-AR`.
+    - `formatDayLabel(weekStart, day)`: devuelve "lun 12 oct" en `es-AR`.
   - Acceptance:
     - Domingo 18/10/2026 23:30 en Buenos Aires (02:30Z del lunes 19) → `2026-10-12`, porque se respeta la zona horaria.
     - Lunes → el mismo día.

@@ -170,7 +170,7 @@ Convenciones:
   - Navegadores: las 2 últimas versiones de Chrome, Firefox, Safari (iOS y macOS) y Edge.
 - Lighthouse ≥ 90 en Performance y Accessibility, en modo mobile **y** en modo desktop, para `/`, `/app/planner` y `/app/lista`.
 - Todos los inputs con `<label>`; la app se puede usar con teclado.
-- Idioma `es-AR` (`<html lang="es-AR">`), fechas como "lun 13 oct".
+- Idioma `es-AR` (`<html lang="es-AR">`), fechas como "lun 12 oct".
 
 ## Boundaries
 - **Always:** correr `npm test && npm run check` antes de cerrar una tarea; validar toda entrada con zod;
