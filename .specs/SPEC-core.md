@@ -106,6 +106,9 @@ Alias de imports: `@/*` → `src/*` (en `tsconfig.json`).
   | 429    | `RATE_LIMITED`  | Demasiados intentos de login fallidos |
   | 500    | `INTERNAL`      | Error no previsto (se loguea; el mensaje al cliente es genérico) |
 - Toda query de datos privados filtra por `locals.user.id`. Nunca se toma el `userId` del body.
+- Errores no previstos: `src/middleware.ts` los convierte en 500 `INTERNAL` en el build de producción. En `npm run dev`, Astro
+  intercepta la excepción antes y muestra su página de error en HTML, con el stack, para depurar. Por eso el código del cliente
+  tiene que tolerar un 500 que no sea JSON (mostrar "Ocurrió un error inesperado").
 
 ## Code Style
 ```ts
