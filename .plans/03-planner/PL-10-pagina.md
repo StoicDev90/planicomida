@@ -21,9 +21,9 @@ interface Props {
   week: string;
   day: number;
   dayLabel: string;
-  slot: SlotView;
+  view: SlotView;
 }
-const { week, day, dayLabel, slot } = Astro.props;
+const { week, day, dayLabel, view } = Astro.props;
 ---
 
 <button
@@ -31,14 +31,14 @@ const { week, day, dayLabel, slot } = Astro.props;
   data-slot
   data-week={week}
   data-day={day}
-  data-meal={slot.mealType}
-  data-meal-label={slot.mealLabel}
+  data-meal={view.mealType}
+  data-meal-label={view.mealLabel}
   data-day-label={dayLabel}
   class="group flex min-h-14 w-full flex-col items-start bg-surface px-3 py-2 text-left transition-colors hover:bg-ink hover:text-paper"
 >
-  <span class="text-small text-muted group-hover:text-paper">{slot.mealLabel}</span>
-  <span data-slot-label class:list={['font-medium break-words', { 'text-muted group-hover:text-paper': !slot.entry }]}>
-    {slot.label}
+  <span class="text-small text-muted group-hover:text-paper">{view.mealLabel}</span>
+  <span data-slot-label class:list={['font-medium break-words', { 'text-muted group-hover:text-paper': !view.entry }]}>
+    {view.label}
   </span>
 </button>
 ```
@@ -86,7 +86,7 @@ Markup (copiar tal cual):
               {d.isToday && <span class="text-accent"> · Hoy</span>}
             </h2>
             {d.slots.map((slot) => (
-              <MealSlot week={week} day={d.day} dayLabel={d.label} slot={slot} />
+              <MealSlot week={week} day={d.day} dayLabel={d.label} view={slot} />
             ))}
           </li>
         ))

@@ -1,0 +1,62 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import MealSlot from '@/components/MealSlot.astro';
+import { getDb } from '@/lib/db';
+import { isWeekStart } from '@/lib/week';
+import { buildWeekView, today, weekRangeLabel } from '@/lib/week-view';
+import { getWeekPlan } from '@/services/plan';
+
+const user = Astro.locals.user!;
+const current = today();
+const requested = Astro.url.searchParams.get('semana');
+const week = isWeekStart(requested) ? requested : current.weekStart;
+const plan = getWeekPlan(getDb(), user.id, week);
+const days = buildWeekView(plan);
+---
+
+<Layout title="Planner · PlaniComida">
+  <main class="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
+    <h1 class="font-display text-head leading-[0.95] uppercase">Planner</h1>
+
+    <nav aria-label="Semanas" class="mt-6 flex flex-wrap items-center gap-3">
+      <a
+        href={`/app/planner?semana=${plan.prevWeek}`}
+        class="btn bg-surface text-ink hover:bg-ink hover:text-paper"
+        aria-label="Semana anterior"
+      >
+        ◀
+      </a>
+      <p class="text-lead font-medium">{weekRangeLabel(week)}</p>
+      <a
+        href={`/app/planner?semana=${plan.nextWeek}`}
+        class="btn bg-surface text-ink hover:bg-ink hover:text-paper"
+        aria-label="Semana siguiente"
+      >
+        ▶
+      </a>
+      {week !== current.weekStart && (
+        <a href="/app/planner" class="link min-h-11 inline-flex items-center">
+          Hoy
+        </a>
+      )}
+    </nav>
+
+    <!-- PL-12 agrega acá "Copiar semana anterior" y "Ver lista de compras" -->
+
+    <ol class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-7 lg:gap-3">
+      {days.map((d) => (
+        <li class:list={['space-y-2', { 'max-lg:order-first': d.isToday }]}>
+          <h2 class="font-medium">
+            {d.label}
+            {d.isToday && <span class="text-accent"> · Hoy</span>}
+          </h2>
+          {d.slots.map((slot) => (
+            <MealSlot week={week} day={d.day} dayLabel={d.label} view={slot} />
+          ))}
+        </li>
+      ))}
+    </ol>
+
+    <!-- PL-11 agrega acá <SlotPicker /> -->
+  </main>
+</Layout>

@@ -1,0 +1,30 @@
+---
+import type { SlotView } from '@/lib/week-view';
+
+interface Props {
+  week: string;
+  day: number;
+  dayLabel: string;
+  view: SlotView;
+}
+const { week, day, dayLabel, view } = Astro.props;
+---
+
+<button
+  type="button"
+  data-slot
+  data-week={week}
+  data-day={day}
+  data-meal={view.mealType}
+  data-meal-label={view.mealLabel}
+  data-day-label={dayLabel}
+  class="group flex min-h-14 w-full flex-col items-start bg-surface px-3 py-2 text-left transition-colors hover:bg-ink hover:text-paper"
+>
+  <span class="text-small text-muted group-hover:text-paper">{view.mealLabel}</span>
+  <span
+    data-slot-label
+    class:list={['font-medium break-words', { 'text-muted group-hover:text-paper': !view.entry }]}
+  >
+    {view.label}
+  </span>
+</button>
