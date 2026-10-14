@@ -1,6 +1,6 @@
 # Plan maestro: shopping-list
 
-> Spec: `.specs/SPEC-shopping-list.md` (aprobada) · Depende de: `core`, `identity`, `recipes`, `planner` · Estado: **PENDIENTE**
+> Spec: `.specs/SPEC-shopping-list.md` (aprobada) · Depende de: `core`, `identity`, `recipes`, `planner` · Estado: **TERMINADO (2026-10-13) · pendiente la prueba manual en navegador**
 
 ## Objetivo
 A partir del plan de una semana, una sola lista de compras: el mismo ingrediente una vez y sumado, agrupado por

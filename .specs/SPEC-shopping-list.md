@@ -113,22 +113,22 @@ Ahora es un arreglo ordenado, y cada ítem tiene una `key` estable para recordar
 - Botón "Compartir/Copiar" que copia la lista como texto plano (para mandarla por WhatsApp), usando `navigator.share` o el portapapeles.
 
 ## Success Criteria
-- [ ] Ejemplo de arriba → resultado exacto (test unitario).
-- [ ] La misma receta en 2 turnos → las cantidades se duplican.
-- [ ] "Leche 1 l" + "Leche 500 ml" → "Leche 1.5 l"; "Leche 1 l" + "Leche 2 taza" → dos líneas.
-- [ ] Tres veces "Sal a gusto" → una sola línea sin cantidad.
-- [ ] Nombres con distintas mayúsculas, tildes o espacios se consolidan; "Tomate" y "Tomates" no (v1).
-- [ ] Las góndolas salen en el orden de `AISLES` y los ítems ordenados alfabéticamente.
-- [ ] Una semana sin entradas ni ítems manuales, o solo con comidas libres → `aisles: []`.
-- [ ] Una receta borrada que sigue en el plan aporta sus ingredientes.
-- [ ] El usuario B no ve la lista del usuario A para la misma semana.
+- [x] Ejemplo de arriba → resultado exacto (test unitario).
+- [x] La misma receta en 2 turnos → las cantidades se duplican.
+- [x] "Leche 1 l" + "Leche 500 ml" → "Leche 1.5 l"; "Leche 1 l" + "Leche 2 taza" → dos líneas.
+- [x] Tres veces "Sal a gusto" → una sola línea sin cantidad.
+- [x] Nombres con distintas mayúsculas, tildes o espacios se consolidan; "Tomate" y "Tomates" no (v1).
+- [x] Las góndolas salen en el orden de `AISLES` y los ítems ordenados alfabéticamente.
+- [x] Una semana sin entradas ni ítems manuales, o solo con comidas libres → `aisles: []`.
+- [x] Una receta borrada que sigue en el plan aporta sus ingredientes.
+- [x] El usuario B no ve la lista del usuario A para la misma semana.
 - [ ] Tachar ítems, recargar la página → siguen tachados. Cambiar de semana → estado independiente.
-- [ ] Un ítem manual agregado aparece en su góndola con `manual: true`; no se suma con un ingrediente de receta del mismo nombre.
-- [ ] Un ítem manual sin góndola va a "Otros"; `qty` sin `unit` (o al revés) → 400.
-- [ ] Una semana con solo ítems manuales muestra solo esos ítems.
-- [ ] El usuario B recibe 404 al hacer DELETE sobre un ítem manual del usuario A.
-- [ ] Los ítems manuales de una semana no aparecen en otra.
-- [ ] Cobertura del 100 % de ramas en `services/shopping-list.ts`.
+- [x] Un ítem manual agregado aparece en su góndola con `manual: true`; no se suma con un ingrediente de receta del mismo nombre.
+- [x] Un ítem manual sin góndola va a "Otros"; `qty` sin `unit` (o al revés) → 400.
+- [x] Una semana con solo ítems manuales muestra solo esos ítems.
+- [x] El usuario B recibe 404 al hacer DELETE sobre un ítem manual del usuario A.
+- [x] Los ítems manuales de una semana no aparecen en otra.
+- [x] Cobertura del 100 % de ramas en `services/shopping-list.ts`.
 - [ ] Manual: en el celular, recorrer la lista y tachar 10 ítems con una mano, sin errores de toque.
 
 ## Fuera de alcance (v1)
