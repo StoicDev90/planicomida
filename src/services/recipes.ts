@@ -173,3 +173,79 @@ export function getRecipe(
 export function canAssignRecipe(db: Db, userId: number, id: number): boolean {
   return getRecipe(db, userId, id) !== null;
 }
+
+export type WriteResult<T> =
+  { ok: true; value: T } | { ok: false; error: 'NOT_FOUND' | 'FORBIDDEN' };
+
+function insertIngredients(db: Db, recipeId: number, ingredients: RecipeInputData['ingredients']) {
+  const insert = db.prepare(
+    'INSERT INTO recipe_ingredients (recipe_id, position, name, qty, unit, aisle) VALUES (?, ?, ?, ?, ?, ?)',
+  );
+  ingredients.forEach((i, position) =>
+    insert.run(recipeId, position, i.name, i.qty, i.unit, i.aisle),
+  );
+}
+
+/** Permiso de escritura: solo las propias y no borradas. */
+function checkWritable(
+  db: Db,
+  userId: number,
+  id: number,
+): { ok: true } | { ok: false; error: 'NOT_FOUND' | 'FORBIDDEN' } {
+  const row = db
+    .prepare<[number], { owner_id: number | null; deleted_at: string | null }>(
+      'SELECT owner_id, deleted_at FROM recipes WHERE id = ?',
+    )
+    .get(id);
+  if (!row || row.deleted_at !== null || (row.owner_id !== null && row.owner_id !== userId)) {
+    return { ok: false, error: 'NOT_FOUND' };
+  }
+  if (row.owner_id === null) return { ok: false, error: 'FORBIDDEN' };
+  return { ok: true };
+}
+
+/** `input` ya validado con RecipeInput. Inserta receta e ingredientes en una transacción. */
+export function createRecipe(db: Db, userId: number, input: RecipeInputData): Recipe {
+  const id = db.transaction(() => {
+    const result = db
+      .prepare('INSERT INTO recipes (owner_id, title, category) VALUES (?, ?, ?)')
+      .run(userId, input.title, input.category);
+    const recipeId = Number(result.lastInsertRowid);
+    insertIngredients(db, recipeId, input.ingredients);
+    return recipeId;
+  })();
+  return getRecipe(db, userId, id)!;
+}
+
+/** Reemplaza título, categoría y TODOS los ingredientes, en una transacción. */
+export function updateRecipe(
+  db: Db,
+  userId: number,
+  id: number,
+  input: RecipeInputData,
+): WriteResult<Recipe> {
+  const check = checkWritable(db, userId, id);
+  if (!check.ok) return check;
+
+  db.transaction(() => {
+    db.prepare('UPDATE recipes SET title = ?, category = ? WHERE id = ?').run(
+      input.title,
+      input.category,
+      id,
+    );
+    db.prepare('DELETE FROM recipe_ingredients WHERE recipe_id = ?').run(id);
+    insertIngredients(db, id, input.ingredients);
+  })();
+  return { ok: true, value: getRecipe(db, userId, id)! };
+}
+
+/** Borrado lógico: deleted_at = ahora. */
+export function deleteRecipe(db: Db, userId: number, id: number): WriteResult<null> {
+  const check = checkWritable(db, userId, id);
+  if (!check.ok) return check;
+
+  db.prepare(
+    "UPDATE recipes SET deleted_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
+  ).run(id);
+  return { ok: true, value: null };
+}
