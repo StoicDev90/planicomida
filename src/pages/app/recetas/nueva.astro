@@ -1,0 +1,14 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import RecipeForm from '@/components/RecipeForm.astro';
+---
+
+<Layout title="Nueva receta · PlaniComida">
+  <main class="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-12">
+    <a href="/app/recetas" class="link text-small">
+      Volver a recetas
+    </a>
+    <h1 class="mt-4 font-display text-head leading-[0.95] uppercase">Nueva receta</h1>
+    <RecipeForm />
+  </main>
+</Layout>

@@ -1,0 +1,226 @@
+---
+import { AISLES, CATEGORIES, CATEGORY_LABELS, UNITS, type Recipe } from '@/services/recipes';
+
+interface Props {
+  /** Sin receta = alta (POST /api/recipes). Con receta = edición (PUT /api/recipes/:id). */
+  recipe?: Recipe;
+}
+const { recipe } = Astro.props;
+const method = recipe ? 'PUT' : 'POST';
+const url = recipe ? `/api/recipes/${recipe.id}` : '/api/recipes';
+const rows = recipe?.ingredients ?? [{ name: '', qty: null, unit: 'unidad', aisle: 'Verdulería' }];
+---
+
+<form id="recipe-form" data-method={method} data-url={url} class="mt-8 space-y-6" novalidate>
+  <p data-error="general" role="alert" class="field-error text-body" hidden></p>
+
+  <div>
+    <label for="title" class="label">
+      Título
+    </label>
+    <input
+      id="title"
+      name="title"
+      class="input"
+      maxlength="80"
+      required
+      value={recipe?.title ?? ''}
+    />
+    <p data-error="title" class="field-error" hidden></p>
+  </div>
+
+  <div>
+    <label for="category" class="label">
+      Categoría
+    </label>
+    <select id="category" name="category" class="input">
+      {CATEGORIES.map((c) => (
+        <option value={c} selected={recipe?.category === c}>
+          {CATEGORY_LABELS[c]}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <fieldset>
+    <legend class="label">Ingredientes</legend>
+    <p class="text-small text-muted">
+      Cantidades para 1 persona. Si comen más, multiplicá por la cantidad de personas.
+    </p>
+    <ol data-rows class="mt-4 space-y-4">
+      {rows.map((row) => (
+        <li
+          data-row
+          class="grid grid-cols-2 gap-2 bg-surface p-3 md:grid-cols-[1fr_5.5rem_7rem_9.5rem_auto] md:items-start"
+        >
+          <input
+            name="name"
+            aria-label="Ingrediente"
+            placeholder="Ingrediente"
+            class="input col-span-2 bg-paper md:col-span-1"
+            maxlength="60"
+            value={row.name}
+          />
+          <input
+            name="qty"
+            aria-label="Cantidad"
+            placeholder="Cant."
+            inputmode="decimal"
+            class="input bg-paper"
+            value={row.qty === null ? '' : String(row.qty).replace('.', ',')}
+            disabled={row.unit === 'a gusto'}
+          />
+          <select name="unit" aria-label="Unidad" class="input bg-paper">
+            {UNITS.map((u) => (
+              <option value={u} selected={row.unit === u}>
+                {u}
+              </option>
+            ))}
+          </select>
+          <select name="aisle" aria-label="Góndola" class="input col-span-2 bg-paper md:col-span-1">
+            {AISLES.map((a) => (
+              <option value={a} selected={row.aisle === a}>
+                {a}
+              </option>
+            ))}
+          </select>
+          <div class="col-span-2 flex gap-1 md:col-span-1">
+            <button
+              type="button"
+              data-action="up"
+              class="min-h-11 min-w-11 bg-paper"
+              aria-label="Subir"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              data-action="down"
+              class="min-h-11 min-w-11 bg-paper"
+              aria-label="Bajar"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              data-action="remove"
+              class="min-h-11 min-w-11 bg-paper"
+              aria-label="Quitar"
+            >
+              ×
+            </button>
+          </div>
+          <p data-row-error class="field-error col-span-2 md:col-span-5" hidden></p>
+        </li>
+      ))}
+    </ol>
+    <p data-error="ingredients" class="field-error" hidden></p>
+    <button type="button" data-action="add" class="link mt-4 min-h-11 font-medium">
+      Agregar ingrediente
+    </button>
+  </fieldset>
+
+  <button type="submit" class="btn">
+    Guardar receta
+  </button>
+</form>
+
+<script>
+  import { splitFieldErrors, toRecipeInput, type IngredientRowValues } from '@/lib/recipe-form';
+
+  const form = document.querySelector<HTMLFormElement>('#recipe-form')!;
+  const list = form.querySelector<HTMLOListElement>('[data-rows]')!;
+  const MAX_ROWS = 30;
+
+  const rowsEls = () => [...list.querySelectorAll<HTMLLIElement>('[data-row]')];
+  const field = (row: Element, name: string) =>
+    row.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`)!;
+
+  function syncQty(row: Element) {
+    const qty = field(row, 'qty') as HTMLInputElement;
+    const aGusto = field(row, 'unit').value === 'a gusto';
+    qty.disabled = aGusto;
+    if (aGusto) qty.value = '';
+  }
+
+  function readRows(): IngredientRowValues[] {
+    return rowsEls().map((row) => ({
+      name: field(row, 'name').value,
+      qty: field(row, 'qty').value,
+      unit: field(row, 'unit').value,
+      aisle: field(row, 'aisle').value,
+    }));
+  }
+
+  function clearErrors() {
+    form.querySelectorAll<HTMLElement>('[data-error], [data-row-error]').forEach((el) => {
+      el.hidden = true;
+      el.textContent = '';
+    });
+  }
+
+  function showError(el: HTMLElement | null, message: string) {
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = false;
+  }
+
+  form.addEventListener('change', (event) => {
+    const target = event.target as HTMLElement;
+    if (target.getAttribute('name') === 'unit') syncQty(target.closest('[data-row]')!);
+  });
+
+  form.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-action]');
+    if (!button) return;
+    const row = button.closest('[data-row]');
+    const action = button.dataset.action;
+    if (action === 'add' && rowsEls().length < MAX_ROWS) {
+      const copy = rowsEls().at(-1)!.cloneNode(true) as HTMLLIElement;
+      copy.querySelectorAll<HTMLInputElement>('input').forEach((input) => (input.value = ''));
+      field(copy, 'unit').value = 'unidad';
+      copy.querySelector<HTMLElement>('[data-row-error]')!.hidden = true;
+      syncQty(copy);
+      list.append(copy);
+      field(copy, 'name').focus();
+    }
+    if (action === 'remove' && row && rowsEls().length > 1) row.remove();
+    if (action === 'up' && row?.previousElementSibling) row.previousElementSibling.before(row);
+    if (action === 'down' && row?.nextElementSibling) row.nextElementSibling.after(row);
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearErrors();
+    const body = toRecipeInput({
+      title: field(form, 'title').value,
+      category: field(form, 'category').value,
+      rows: readRows(),
+    });
+    const res = await fetch(form.dataset.url!, {
+      method: form.dataset.method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const recipe = await res.json();
+      location.href = `/app/recetas/${recipe.id}`;
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    const general = form.querySelector<HTMLElement>('[data-error="general"]');
+    if (res.status === 400 && data?.error?.fields) {
+      const { form: formErrors, rows } = splitFieldErrors(data.error.fields);
+      for (const [key, message] of Object.entries(formErrors)) {
+        showError(form.querySelector<HTMLElement>(`[data-error="${key}"]`), message);
+      }
+      rowsEls().forEach((row, i) => {
+        if (rows[i])
+          showError(row.querySelector('[data-row-error]'), Object.values(rows[i]).join(' · '));
+      });
+      showError(general, 'Revisá los datos marcados.');
+    } else {
+      showError(general, data?.error?.message ?? 'Ocurrió un error inesperado. Probá de nuevo.');
+    }
+  });
+</script>
