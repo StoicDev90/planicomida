@@ -93,12 +93,12 @@ El orden de las góndolas en el `CHECK` es el orden en que aparecen en la lista 
   con selectores de unidad y góndola. Las recetas del catálogo se muestran en solo lectura.
 
 ## Success Criteria
-- [ ] Después de `npm run db:seed`, `GET /api/recipes` devuelve ≥ 12 recetas de catálogo (≥ 2 por categoría); correr el seed dos veces no las duplica.
-- [ ] Crear una receta con 3 ingredientes → `GET /api/recipes/:id` la devuelve igual (con orden y tipos).
-- [ ] El usuario B recibe 404 al hacer GET, PUT o DELETE sobre una receta del usuario A.
-- [ ] PUT o DELETE sobre una receta del catálogo → 403.
-- [ ] `qty: null` con una unidad distinta de `'a gusto'` → 400; 0 o 31 ingredientes → 400; una góndola o unidad desconocida → 400.
-- [ ] Una receta borrada no aparece en `GET /api/recipes`, pero `getRecipe(..., { includeDeleted: true })` la devuelve.
+- [x] Después de `npm run db:seed`, `GET /api/recipes` devuelve ≥ 12 recetas de catálogo (≥ 2 por categoría); correr el seed dos veces no las duplica.
+- [x] Crear una receta con 3 ingredientes → `GET /api/recipes/:id` la devuelve igual (con orden y tipos).
+- [x] El usuario B recibe 404 al hacer GET, PUT o DELETE sobre una receta del usuario A.
+- [x] PUT o DELETE sobre una receta del catálogo → 403.
+- [x] `qty: null` con una unidad distinta de `'a gusto'` → 400; 0 o 31 ingredientes → 400; una góndola o unidad desconocida → 400.
+- [x] Una receta borrada no aparece en `GET /api/recipes`, pero `getRecipe(..., { includeDeleted: true })` la devuelve.
 - [ ] Manual: crear una receta en el celular (360 px) y en la PC (1280 px) sin scroll horizontal; el aviso "Cantidades para 1 persona" es visible.
 
 ## Fuera de alcance (v1)

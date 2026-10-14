@@ -1,6 +1,6 @@
 # Plan maestro: recipes
 
-> Spec: `.specs/SPEC-recipes.md` (aprobada) · Depende de: `core`, `identity` · Estado: **PENDIENTE**
+> Spec: `.specs/SPEC-recipes.md` (aprobada) · Depende de: `core`, `identity` · Estado: **TERMINADO (2026-10-13) · pendiente la prueba manual en navegador**
 
 ## Objetivo
 Recetas con ingredientes estructurados: un catálogo semilla de solo lectura (`owner_id IS NULL`) y recetas propias
