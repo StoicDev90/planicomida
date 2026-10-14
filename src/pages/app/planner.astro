@@ -5,14 +5,36 @@ import SlotPicker from '@/components/SlotPicker.astro';
 import { getDb } from '@/lib/db';
 import { isWeekStart } from '@/lib/week';
 import { buildWeekView, today, weekRangeLabel } from '@/lib/week-view';
-import { getWeekPlan } from '@/services/plan';
+import { copyWeek, getWeekPlan } from '@/services/plan';
 
 const user = Astro.locals.user!;
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const target = String(form.get('week') ?? '');
+  const source = String(form.get('source') ?? '');
+  if (!isWeekStart(target)) return Astro.redirect('/app/planner', 303);
+  if (!isWeekStart(source) || source === target)
+    return Astro.redirect(`/app/planner?semana=${target}`, 303);
+  const { copied, skipped } = copyWeek(getDb(), user.id, target, source);
+  return Astro.redirect(
+    `/app/planner?semana=${target}&copiadas=${copied}&omitidas=${skipped}`,
+    303,
+  );
+}
 const current = today();
 const requested = Astro.url.searchParams.get('semana');
 const week = isWeekStart(requested) ? requested : current.weekStart;
 const plan = getWeekPlan(getDb(), user.id, week);
 const days = buildWeekView(plan);
+const copiedParam = Astro.url.searchParams.get('copiadas');
+const skippedCount = Number(Astro.url.searchParams.get('omitidas') ?? 0);
+let copyMessage = '';
+if (copiedParam !== null) {
+  const n = Number(copiedParam);
+  copyMessage = n === 1 ? 'Se copió 1 comida' : `Se copiaron ${n} comidas`;
+  if (skippedCount === 1) copyMessage += ' · 1 receta borrada no se copió';
+  if (skippedCount > 1) copyMessage += ` · ${skippedCount} recetas borradas no se copiaron`;
+}
 ---
 
 <Layout title="Planner · PlaniComida">
@@ -42,7 +64,26 @@ const days = buildWeekView(plan);
       )}
     </nav>
 
-    <!-- PL-12 agrega acá "Copiar semana anterior" y "Ver lista de compras" -->
+    <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <form method="post">
+        <input type="hidden" name="week" value={week} />
+        <input type="hidden" name="source" value={plan.prevWeek} />
+        <button type="submit" class="link min-h-11 font-medium">
+          Copiar semana anterior
+        </button>
+      </form>
+      <a
+        href={`/app/lista?semana=${week}`}
+        class="link inline-flex min-h-11 items-center font-medium"
+      >
+        Ver lista de compras
+      </a>
+    </div>
+    {copyMessage && (
+      <p role="status" class="mt-4 bg-surface px-4 py-3">
+        {copyMessage}
+      </p>
+    )}
 
     <ol class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-7 lg:gap-3">
       {days.map((d) => (
