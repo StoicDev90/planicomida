@@ -1,6 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import MealSlot from '@/components/MealSlot.astro';
+import SlotPicker from '@/components/SlotPicker.astro';
 import { getDb } from '@/lib/db';
 import { isWeekStart } from '@/lib/week';
 import { buildWeekView, today, weekRangeLabel } from '@/lib/week-view';
@@ -57,6 +58,6 @@ const days = buildWeekView(plan);
       ))}
     </ol>
 
-    <!-- PL-11 agrega acá <SlotPicker /> -->
+    <SlotPicker />
   </main>
 </Layout>
