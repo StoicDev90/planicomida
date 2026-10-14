@@ -159,3 +159,59 @@ export function clearMeal(db: Db, userId: number, slot: Slot): void {
     'DELETE FROM meal_plan_entries WHERE user_id = ? AND week_start = ? AND day = ? AND meal_type = ?',
   ).run(userId, slot.week, slot.day, slot.meal);
 }
+
+/**
+ * Copia las entradas de `sourceWeek` a `targetWeek` (mismo día y turno), en una transacción.
+ * Solo llena turnos vacíos. Entradas con receta borrada → no se copian y suman a `skipped`.
+ * Si las semanas son iguales devuelve { copied: 0, skipped: 0 } sin tocar nada.
+ */
+export function copyWeek(
+  db: Db,
+  userId: number,
+  targetWeek: string,
+  sourceWeek: string,
+): { copied: number; skipped: number } {
+  if (targetWeek === sourceWeek) return { copied: 0, skipped: 0 };
+  return db.transaction(() => {
+    const rows = db
+      .prepare<
+        [number, string],
+        {
+          day: number;
+          meal_type: MealType;
+          recipe_id: number | null;
+          custom_meal_name: string | null;
+          deleted_at: string | null;
+        }
+      >(
+        `SELECT e.day, e.meal_type, e.recipe_id, e.custom_meal_name, r.deleted_at
+  FROM meal_plan_entries e
+  LEFT JOIN recipes r ON r.id = e.recipe_id
+ WHERE e.user_id = ? AND e.week_start = ?`,
+      )
+      .all(userId, sourceWeek);
+    const insert = db.prepare(
+      `INSERT INTO meal_plan_entries (user_id, week_start, day, meal_type, recipe_id, custom_meal_name)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT (user_id, week_start, day, meal_type) DO NOTHING`,
+    );
+    let copied = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      if (row.recipe_id !== null && row.deleted_at !== null) {
+        skipped++;
+        continue;
+      }
+      const result = insert.run(
+        userId,
+        targetWeek,
+        row.day,
+        row.meal_type,
+        row.recipe_id,
+        row.custom_meal_name,
+      );
+      copied += result.changes;
+    }
+    return { copied, skipped };
+  })();
+}
