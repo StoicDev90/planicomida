@@ -77,3 +77,8 @@ export function getDb(): Db {
   instance ??= openDb(process.env.DATABASE_PATH ?? DEFAULT_DATABASE_PATH);
   return instance;
 }
+
+/** Solo para tests: reemplaza la conexión única (o la limpia con `undefined`). */
+export function setDb(db: Db | undefined): void {
+  instance = db;
+}
