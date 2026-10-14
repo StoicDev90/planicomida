@@ -90,19 +90,19 @@ Cambios respecto del esquema original:
 - Un link "Ver lista de compras" lleva a `/app/lista?semana=<misma semana>`.
 
 ## Success Criteria
-- [ ] `GET /api/plan` sin `week` devuelve el lunes de la semana actual según `TZ` (test con fecha fija: domingo 18/10/2026 → `2026-10-12`).
-- [ ] `week=2026-10-13` (martes) o `week=2026-02-30` → 400.
-- [ ] Hacer PUT dos veces sobre el mismo turno deja una sola fila con el último valor.
-- [ ] Un body con `recipeId` **y** `customMealName`, o sin ninguno → 400.
-- [ ] Asignar una receta de otro usuario o una receta borrada → 404.
+- [x] `GET /api/plan` sin `week` devuelve el lunes de la semana actual según `TZ` (test con fecha fija: domingo 18/10/2026 → `2026-10-12`).
+- [x] `week=2026-10-13` (martes) o `week=2026-02-30` → 400.
+- [x] Hacer PUT dos veces sobre el mismo turno deja una sola fila con el último valor.
+- [x] Un body con `recipeId` **y** `customMealName`, o sin ninguno → 400.
+- [x] Asignar una receta de otro usuario o una receta borrada → 404.
 - [ ] El usuario B no ve ni modifica el plan del usuario A (mismo `week`, resultados independientes).
-- [ ] Una receta borrada después de asignarse sigue apareciendo en el plan con `deleted: true`.
-- [ ] Copiar con el destino vacío → mismas entradas que el origen en los mismos turnos; `copied` = cantidad de entradas.
-- [ ] Copiar con el destino ya cargado en parte → los turnos ocupados no cambian; solo se llenan los vacíos.
-- [ ] Una receta borrada en el origen → no se copia y suma 1 a `skipped`.
-- [ ] Copiar una semana sobre sí misma o con una semana inválida → 400; copiar desde la semana de otro usuario no es posible (siempre se usa el `user_id` de la sesión).
+- [x] Una receta borrada después de asignarse sigue apareciendo en el plan con `deleted: true`.
+- [x] Copiar con el destino vacío → mismas entradas que el origen en los mismos turnos; `copied` = cantidad de entradas.
+- [x] Copiar con el destino ya cargado en parte → los turnos ocupados no cambian; solo se llenan los vacíos.
+- [x] Una receta borrada en el origen → no se copia y suma 1 a `skipped`.
+- [x] Copiar una semana sobre sí misma o con una semana inválida → 400; copiar desde la semana de otro usuario no es posible (siempre se usa el `user_id` de la sesión).
 - [ ] Navegar ◀ ▶ muestra semanas distintas y los datos de cada una persisten.
-- [ ] `:meal = merienda` (valor desconocido) → 400; `desayuno` y `snack` se aceptan.
+- [x] `:meal = merienda` (valor desconocido) → 400; `desayuno` y `snack` se aceptan.
 - [ ] Manual: planificar los almuerzos y las cenas de una semana en menos de 2 minutos con recetas del catálogo, tanto en el celular (360 px) como en la PC (1280 px).
 - [ ] En la PC, la grilla completa (7 × 4) se ve sin scroll horizontal y el selector de recetas se usa con teclado (Tab, Enter, Esc).
 

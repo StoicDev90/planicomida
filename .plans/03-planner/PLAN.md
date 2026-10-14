@@ -1,6 +1,6 @@
 # Plan maestro: planner
 
-> Spec: `.specs/SPEC-planner.md` (aprobada) · Depende de: `core`, `identity`, `recipes` · Estado: **PENDIENTE**
+> Spec: `.specs/SPEC-planner.md` (aprobada) · Depende de: `core`, `identity`, `recipes` · Estado: **TERMINADO (2026-10-13) · pendiente la prueba manual en navegador**
 
 ## Objetivo
 Plan por semana (lunes a domingo × desayuno, almuerzo, snack y cena), con historial, navegación entre semanas,

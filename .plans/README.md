@@ -8,7 +8,7 @@ pensada para que la ejecute un subagente **sin tener que entender la spec entera
 | 0 | `core` | [00-core/PLAN.md](00-core/PLAN.md) | T1–T8 | Terminado |
 | 1 | `identity` | [01-identity/PLAN.md](01-identity/PLAN.md) | ID-01 … ID-15 | Terminado (falta prueba manual en navegador) |
 | 2 | `recipes` | [02-recipes/PLAN.md](02-recipes/PLAN.md) | RC-01 … RC-14 | Terminado (falta prueba manual en navegador) |
-| 3 | `planner` | [03-planner/PLAN.md](03-planner/PLAN.md) | PL-01 … PL-13 | Pendiente (necesita recipes) |
+| 3 | `planner` | [03-planner/PLAN.md](03-planner/PLAN.md) | PL-01 … PL-13 | Terminado (falta prueba manual en navegador) |
 | 4 | `shopping-list` | [04-shopping-list/PLAN.md](04-shopping-list/PLAN.md) | SL-01 … SL-12 | Pendiente (necesita planner) |
 
 Las tareas de un módulo se ejecutan **en el orden de su número**, salvo que el `PLAN.md` diga que dos se pueden
