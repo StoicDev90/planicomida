@@ -2,6 +2,7 @@ import { z } from 'astro/zod';
 import type { Db } from '@/lib/db';
 import { normalizeText } from '@/lib/text';
 import { AISLES, type Aisle, type Unit } from '@/services/recipes';
+import { getRecipeIdsForWeek } from '@/services/plan';
 
 /** Unidades después de pasar kg → g y l → ml. */
 export type BaseUnit = 'unidad' | 'g' | 'ml' | 'cda' | 'cdta' | 'taza' | 'a gusto';
@@ -203,4 +204,41 @@ export function deleteManualItem(db: Db, userId: number, id: number): boolean {
     .prepare('DELETE FROM shopping_list_manual_items WHERE id = ? AND user_id = ?')
     .run(id, userId);
   return result.changes === 1;
+}
+
+/** Lista de compras de una semana: recetas del plan (consolidadas) + ítems manuales. */
+export function getShoppingList(db: Db, userId: number, weekStart: string): ShoppingList {
+  const ids = getRecipeIdsForWeek(db, userId, weekStart);
+  const byRecipe = new Map<number, IngredientRow[]>();
+  if (ids.length > 0) {
+    const unique = [...new Set(ids)];
+    const rows = db
+      .prepare(
+        `SELECT recipe_id, name, qty, unit, aisle FROM recipe_ingredients
+          WHERE recipe_id IN (${unique.map(() => '?').join(', ')}) ORDER BY recipe_id, position`,
+      )
+      .all(...unique) as (IngredientRow & { recipe_id: number })[];
+    for (const { recipe_id, ...ingredient } of rows) {
+      const list = byRecipe.get(recipe_id);
+      if (list) list.push(ingredient);
+      else byRecipe.set(recipe_id, [ingredient]);
+    }
+  }
+  // Una receta en dos turnos aporta dos veces, en el orden del plan.
+  const rows = ids.flatMap((id) => byRecipe.get(id) ?? []);
+
+  const customMeals = db
+    .prepare(
+      `SELECT custom_meal_name FROM meal_plan_entries
+        WHERE user_id = ? AND week_start = ? AND custom_meal_name IS NOT NULL
+        ORDER BY day, CASE meal_type WHEN 'desayuno' THEN 0 WHEN 'almuerzo' THEN 1 WHEN 'snack' THEN 2 ELSE 3 END`,
+    )
+    .pluck()
+    .all(userId, weekStart) as string[];
+
+  return {
+    weekStart,
+    aisles: buildAisles(consolidate(rows), listManualItems(db, userId, weekStart)),
+    customMeals: [...new Set(customMeals)],
+  };
 }
