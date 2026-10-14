@@ -1,3 +1,5 @@
+import type { Db } from '@/lib/db';
+import { normalizeText } from '@/lib/text';
 import { z } from 'astro/zod';
 
 // Mismo orden que los CHECK de db/migrations/002_recipes.sql.
@@ -77,4 +79,97 @@ export interface RecipeSummary {
   category: Category;
   isCatalog: boolean;
   ingredientCount: number;
+}
+
+interface RecipeRow {
+  id: number;
+  title: string;
+  category: Category;
+  owner_id: number | null;
+}
+
+interface IngredientRow {
+  name: string;
+  qty: number | null;
+  unit: Unit;
+  aisle: Aisle;
+}
+
+export function listRecipes(
+  db: Db,
+  userId: number,
+  filters: { category?: Category; q?: string; mine?: boolean } = {},
+): RecipeSummary[] {
+  const rows = db
+    .prepare<
+      { userId: number; category: string | null; mine: number },
+      RecipeRow & { ingredient_count: number }
+    >(
+      `SELECT r.id, r.title, r.category, r.owner_id, COUNT(i.id) AS ingredient_count
+         FROM recipes r
+         LEFT JOIN recipe_ingredients i ON i.recipe_id = r.id
+        WHERE r.deleted_at IS NULL
+          AND (r.owner_id IS NULL OR r.owner_id = @userId)
+          AND (@category IS NULL OR r.category = @category)
+          AND (@mine = 0 OR r.owner_id = @userId)
+        GROUP BY r.id`,
+    )
+    .all({
+      userId,
+      category: filters.category ?? null,
+      mine: filters.mine ? 1 : 0,
+    });
+
+  const needle = filters.q ? normalizeText(filters.q) : null;
+  return rows
+    .filter((r) => needle === null || normalizeText(r.title).includes(needle))
+    .sort((a, b) => a.title.localeCompare(b.title, 'es'))
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      isCatalog: r.owner_id === null,
+      ingredientCount: r.ingredient_count,
+    }));
+}
+
+/** null si no existe, si es de otro usuario o (sin includeDeleted) si está borrada. */
+export function getRecipe(
+  db: Db,
+  userId: number,
+  id: number,
+  options: { includeDeleted?: boolean } = {},
+): Recipe | null {
+  const row = db
+    .prepare<[number, number, number], RecipeRow>(
+      `SELECT id, title, category, owner_id FROM recipes
+        WHERE id = ? AND (owner_id IS NULL OR owner_id = ?)
+          AND (? = 1 OR deleted_at IS NULL)`,
+    )
+    .get(id, userId, options.includeDeleted ? 1 : 0);
+  if (!row) return null;
+
+  const ingredients = db
+    .prepare<[number], IngredientRow>(
+      'SELECT name, qty, unit, aisle FROM recipe_ingredients WHERE recipe_id = ? ORDER BY position',
+    )
+    .all(id);
+
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    isCatalog: row.owner_id === null,
+    ingredients: ingredients.map((i) => ({
+      name: i.name,
+      qty: i.qty,
+      unit: i.unit,
+      aisle: i.aisle,
+    })),
+  };
+}
+
+/** Visible para el usuario y no borrada. */
+export function canAssignRecipe(db: Db, userId: number, id: number): boolean {
+  return getRecipe(db, userId, id) !== null;
 }
