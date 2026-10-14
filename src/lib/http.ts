@@ -26,7 +26,7 @@ export function errorResponse(
 }
 
 /** Primer mensaje de error por campo; la clave es la ruta con puntos ("ingredients.0.name") o "_". */
-function fieldErrors(error: z.ZodError): Record<string, string> {
+export function fieldErrors(error: z.ZodError): Record<string, string> {
   const fields: Record<string, string> = {};
   for (const issue of error.issues) {
     const key = issue.path.join('.') || '_';
