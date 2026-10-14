@@ -44,3 +44,24 @@ export function insertRecipe(
   ingredients.forEach((i, position) => insert.run(id, position, i.name, i.qty, i.unit, i.aisle));
   return id;
 }
+
+/** Inserta una entrada del plan: con receta (número) o comida libre (string). */
+export function insertEntry(
+  db: Db,
+  userId: number,
+  week: string,
+  day: number,
+  meal: string,
+  value: number | string,
+): void {
+  db.prepare(
+    'INSERT INTO meal_plan_entries (user_id, week_start, day, meal_type, recipe_id, custom_meal_name) VALUES (?, ?, ?, ?, ?, ?)',
+  ).run(
+    userId,
+    week,
+    day,
+    meal,
+    typeof value === 'number' ? value : null,
+    typeof value === 'string' ? value : null,
+  );
+}
