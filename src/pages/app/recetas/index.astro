@@ -1,0 +1,89 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import RecipeCard from '@/components/RecipeCard.astro';
+import { getDb } from '@/lib/db';
+import { CATEGORIES, CATEGORY_LABELS, listRecipes, RecipeListQuery } from '@/services/recipes';
+
+const user = Astro.locals.user!;
+const parsed = RecipeListQuery.safeParse(Object.fromEntries(Astro.url.searchParams));
+const filters = parsed.success ? parsed.data : {};
+const recipes = listRecipes(getDb(), user.id, {
+  category: filters.category,
+  q: filters.q,
+  mine: filters.mine === '1',
+});
+---
+
+<Layout title="Recetas · PlaniComida">
+  <main class="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <h1 class="font-display text-head leading-[0.95] uppercase">Recetas</h1>
+      <a href="/app/recetas/nueva" class="btn">
+        Nueva receta
+      </a>
+    </div>
+
+    <form
+      method="get"
+      class="mt-8 grid gap-4 md:grid-cols-[1fr_12rem_auto_auto] md:items-end"
+      role="search"
+    >
+      <div>
+        <label for="q" class="label">
+          Buscar
+        </label>
+        <input
+          id="q"
+          name="q"
+          type="search"
+          class="input"
+          value={filters.q ?? ''}
+          placeholder="Ej.: tarta"
+        />
+      </div>
+      <div>
+        <label for="category" class="label">
+          Categoría
+        </label>
+        <select id="category" name="category" class="input">
+          <option value="">Todas</option>
+          {CATEGORIES.map((c) => (
+            <option value={c} selected={filters.category === c}>
+              {CATEGORY_LABELS[c]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="checkbox"
+          name="mine"
+          value="1"
+          checked={filters.mine === '1'}
+          class="size-5 accent-accent"
+        />
+        Solo las mías
+      </label>
+      <button type="submit" class="btn">
+        Filtrar
+      </button>
+    </form>
+
+    {recipes.length === 0 ? (
+      <p class="mt-10">
+        No hay recetas con esos filtros.{' '}
+        <a href="/app/recetas" class="link">
+          Ver todas
+        </a>
+      </p>
+    ) : (
+      <ul class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {recipes.map((recipe) => (
+          <li>
+            <RecipeCard recipe={recipe} />
+          </li>
+        ))}
+      </ul>
+    )}
+  </main>
+</Layout>

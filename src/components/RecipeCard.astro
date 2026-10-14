@@ -1,0 +1,20 @@
+---
+import { CATEGORY_LABELS, type RecipeSummary } from '@/services/recipes';
+
+interface Props {
+  recipe: RecipeSummary;
+}
+const { recipe } = Astro.props;
+---
+
+<a
+  href={`/app/recetas/${recipe.id}`}
+  class="block min-h-11 bg-surface p-5 transition-colors hover:bg-ink hover:text-paper"
+>
+  <span class="block text-lead leading-snug font-medium">{recipe.title}</span>
+  <span class="mt-2 block text-small">
+    {CATEGORY_LABELS[recipe.category]} · {recipe.ingredientCount}
+    {recipe.ingredientCount === 1 ? 'ingrediente' : 'ingredientes'} ·{' '}
+    {recipe.isCatalog ? 'Catálogo' : 'Mía'}
+  </span>
+</a>
