@@ -1,0 +1,81 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import RecipeForm from '@/components/RecipeForm.astro';
+import { getDb } from '@/lib/db';
+import { formatAmount } from '@/lib/format';
+import { CATEGORY_LABELS, getRecipe } from '@/services/recipes';
+
+const id = Number(Astro.params.id);
+const recipe =
+  Number.isInteger(id) && id > 0 ? getRecipe(getDb(), Astro.locals.user!.id, id) : null;
+if (!recipe) Astro.response.status = 404;
+const title = recipe ? `${recipe.title} · PlaniComida` : 'Receta no encontrada · PlaniComida';
+---
+
+<Layout {title}>
+  <main class="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-12">
+    <a href="/app/recetas" class="link text-small">
+      Volver a recetas
+    </a>
+
+    {!recipe && (
+      <h1 class="mt-4 font-display text-head leading-[0.95] uppercase">
+        No encontramos esa receta
+      </h1>
+    )}
+
+    {recipe?.isCatalog && (
+      <>
+        <h1 class="mt-4 font-display text-head leading-[0.95] uppercase">{recipe.title}</h1>
+        <p class="text-small">{CATEGORY_LABELS[recipe.category]} · Catálogo</p>
+        <p class="mt-6 text-small text-muted">
+          Cantidades para 1 persona. Si comen más, multiplicá por la cantidad de personas.
+        </p>
+        <ul class="mt-4 space-y-2">
+          {recipe.ingredients.map((i) => (
+            <li class="flex justify-between gap-4 bg-surface px-4 py-3">
+              <span>{i.name}</span>
+              <span class="text-muted">{formatAmount(i.qty, i.unit)}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="mt-6 text-small text-muted">Las recetas del catálogo no se pueden editar.</p>
+      </>
+    )}
+
+    {recipe && !recipe.isCatalog && (
+      <>
+        <h1 class="mt-4 font-display text-head leading-[0.95] uppercase">Editar receta</h1>
+        <RecipeForm recipe={recipe} />
+        <section class="mt-12 bg-surface p-5" aria-labelledby="borrar">
+          <h2 id="borrar" class="font-medium">
+            Borrar receta
+          </h2>
+          <p class="mt-1 text-small">Va a seguir apareciendo en las semanas donde ya la usaste.</p>
+          <button
+            type="button"
+            id="delete-recipe"
+            data-url={`/api/recipes/${recipe.id}`}
+            class="link mt-3 min-h-11 font-medium text-danger"
+          >
+            Borrar esta receta
+          </button>
+        </section>
+        <script>
+          const button = document.querySelector<HTMLButtonElement>('#delete-recipe');
+          button?.addEventListener('click', async () => {
+            if (
+              !confirm(
+                '¿Borrar esta receta? Va a seguir apareciendo en las semanas donde ya la usaste.',
+              )
+            )
+              return;
+            const res = await fetch(button.dataset.url!, { method: 'DELETE' });
+            if (res.ok) location.href = '/app/recetas';
+            else alert('No se pudo borrar la receta. Probá de nuevo.');
+          });
+        </script>
+      </>
+    )}
+  </main>
+</Layout>
