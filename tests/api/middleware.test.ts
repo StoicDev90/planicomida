@@ -99,6 +99,28 @@ describe('middleware de sesión', () => {
     expect(jar.get('pc_session')).toBeNull();
   });
 
+  it('sesión vencida: /api responde 401, /app redirige a login y la fila se borra', async () => {
+    const user = createUser(db);
+    const token = 'token-vencido';
+    db.prepare('INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)').run(
+      hashToken(token),
+      user.id,
+      '2000-01-01T00:00:00.000Z',
+    );
+
+    const api = apiContext({ path: '/api/recipes', cookies: { pc_session: token } });
+    const apiRes = (await onRequest(api.context, ok)) as Response;
+    expect(apiRes.status).toBe(401);
+    expect((await apiRes.json()).error.code).toBe('UNAUTHENTICATED');
+    expect(db.prepare('SELECT count(*) FROM sessions').pluck().get()).toBe(0);
+    expect(api.jar.get('pc_session')).toBeNull();
+
+    const app = apiContext({ path: '/app/planner', cookies: { pc_session: token } });
+    const appRes = (await onRequest(app.context, ok)) as Response;
+    expect(appRes.status).toBe(302);
+    expect(appRes.headers.get('Location')).toBe('/login?next=%2Fapp%2Fplanner');
+  });
+
   it('sesión por vencer se renueva y se re-setea la cookie', async () => {
     const user = createUser(db);
     db.prepare('INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)').run(

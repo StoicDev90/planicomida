@@ -1,6 +1,6 @@
 # Plan maestro: identity
 
-> Spec: `.specs/SPEC-identity.md` (aprobada) · Depende de: `core` (terminado) · Estado: **PENDIENTE**
+> Spec: `.specs/SPEC-identity.md` (aprobada) · Depende de: `core` (terminado) · Estado: **TERMINADO (2026-10-13)** · pendiente solo la prueba manual en el navegador (ID-15, paso 3)
 
 ## Objetivo
 Cuentas con email y contraseña, sesiones por cookie (`pc_session`, 30 días, deslizante) y protección de rutas:
