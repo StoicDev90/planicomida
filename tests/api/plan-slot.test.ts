@@ -110,6 +110,33 @@ describe('PUT /api/plan/:week/:day/:meal', () => {
     });
   });
 
+  it('otro usuario asigna el mismo turno → no toca el plan de Ana', async () => {
+    const ana = createUser(db);
+    const beto = createUser(db, 'beto@mail.com', 'Beto');
+    const put = (user: typeof ana, customMealName: string) =>
+      PUT(
+        apiContext({
+          path: '/api/plan/2026-10-12/1/almuerzo',
+          method: 'PUT',
+          body: { customMealName },
+          params,
+          user,
+        }).context,
+      );
+
+    await put(ana, 'Milanesas');
+    const res = await put(beto, 'Ensalada');
+
+    expect(res.status).toBe(200);
+    expect(countEntries(ana.id, '2026-10-12', 1, 'almuerzo')).toBe(1);
+    expect(countEntries(beto.id, '2026-10-12', 1, 'almuerzo')).toBe(1);
+    const nameOfAna = db
+      .prepare('SELECT custom_meal_name FROM meal_plan_entries WHERE user_id = ?')
+      .pluck()
+      .get(ana.id);
+    expect(nameOfAna).toBe('Milanesas');
+  });
+
   it.each([
     { week: '2026-10-13', day: '1', meal: 'almuerzo' },
     { week: '2026-10-12', day: '7', meal: 'almuerzo' },

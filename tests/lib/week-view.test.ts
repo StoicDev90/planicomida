@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { WeekPlan } from '@/services/plan';
 import { buildWeekView, slotLabel, today, weekRangeLabel } from '@/lib/week-view';
 
@@ -103,5 +103,24 @@ describe('slotLabel', () => {
         customMealName: null,
       }),
     ).toBe('Tarta (borrada)');
+  });
+});
+
+describe('ramas defensivas', () => {
+  const originalTz = process.env.TZ;
+  afterEach(() => {
+    if (originalTz === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTz;
+  });
+
+  it('slotLabel: una entrada sin receta ni comida libre muestra "Agregar"', () => {
+    expect(slotLabel({ day: 0, mealType: 'cena', recipe: null, customMealName: null })).toBe(
+      'Agregar',
+    );
+  });
+
+  it('today: sin TZ definida usa America/Argentina/Buenos_Aires', () => {
+    delete process.env.TZ;
+    expect(today(new Date('2026-10-18T02:30:00Z'))).toEqual({ weekStart: '2026-10-12', day: 5 });
   });
 });

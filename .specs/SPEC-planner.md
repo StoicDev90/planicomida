@@ -95,7 +95,7 @@ Cambios respecto del esquema original:
 - [x] Hacer PUT dos veces sobre el mismo turno deja una sola fila con el último valor.
 - [x] Un body con `recipeId` **y** `customMealName`, o sin ninguno → 400.
 - [x] Asignar una receta de otro usuario o una receta borrada → 404.
-- [ ] El usuario B no ve ni modifica el plan del usuario A (mismo `week`, resultados independientes).
+- [x] El usuario B no ve ni modifica el plan del usuario A (mismo `week`, resultados independientes).
 - [x] Una receta borrada después de asignarse sigue apareciendo en el plan con `deleted: true`.
 - [x] Copiar con el destino vacío → mismas entradas que el origen en los mismos turnos; `copied` = cantidad de entradas.
 - [x] Copiar con el destino ya cargado en parte → los turnos ocupados no cambian; solo se llenan los vacíos.
