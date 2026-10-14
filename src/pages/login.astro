@@ -1,0 +1,98 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getDb } from '@/lib/db';
+import { safeNext } from '@/lib/safe-next';
+import { setSessionCookie } from '@/lib/session-cookie';
+import { loginFlow } from '@/services/auth-flows';
+
+let next = safeNext(Astro.url.searchParams.get('next'));
+let email = '';
+let fields: Record<string, string> = {};
+let message = '';
+
+if (Astro.request.method === 'POST') {
+  const form = Object.fromEntries(await Astro.request.formData());
+  next = safeNext(String(form.next ?? ''));
+  email = String(form.email ?? '');
+  const result = await loginFlow(getDb(), form, Astro.clientAddress);
+  if (result.ok) {
+    setSessionCookie(Astro.cookies, result.token, result.expiresAt);
+    return Astro.redirect(next, 303);
+  }
+  fields = result.fields ?? {};
+  message = result.message;
+  Astro.response.status = result.status;
+}
+---
+
+<Layout title="Ingresar · PlaniComida">
+  <main class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-8 md:px-6">
+    <a href="/" class="font-display text-lead uppercase">
+      PlaniComida
+    </a>
+    <section class="mx-auto mt-10 w-full max-w-sm md:mt-20" aria-labelledby="titulo">
+      <h1 id="titulo" class="font-display text-head leading-[0.95] uppercase">
+        Ingresar
+      </h1>
+      {message && (
+        <p role="alert" class="field-error mt-4 text-body">
+          {message}
+        </p>
+      )}
+      <form method="post" class="mt-8 space-y-5" novalidate>
+        <input type="hidden" name="next" value={next} />
+        <div>
+          <label for="email" class="label">
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            class="input"
+            autocomplete="email"
+            required
+            value={email}
+            aria-invalid={fields.email ? 'true' : undefined}
+            aria-describedby={fields.email ? 'email-error' : undefined}
+          />
+          {fields.email && (
+            <p id="email-error" class="field-error">
+              {fields.email}
+            </p>
+          )}
+        </div>
+        <div>
+          <label for="password" class="label">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="input"
+            autocomplete="current-password"
+            required
+            minlength="8"
+            aria-invalid={fields.password ? 'true' : undefined}
+            aria-describedby={fields.password ? 'password-error' : undefined}
+          />
+          {fields.password && (
+            <p id="password-error" class="field-error">
+              {fields.password}
+            </p>
+          )}
+        </div>
+        <button type="submit" class="btn w-full">
+          Ingresar
+        </button>
+      </form>
+      <p class="mt-6">
+        ¿No tenés cuenta?{' '}
+        <a href="/registro" class="link">
+          Creá una
+        </a>
+      </p>
+    </section>
+  </main>
+</Layout>
