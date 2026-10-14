@@ -1,3 +1,5 @@
+import { z } from 'astro/zod';
+import type { Db } from '@/lib/db';
 import { normalizeText } from '@/lib/text';
 import { AISLES, type Aisle, type Unit } from '@/services/recipes';
 
@@ -146,4 +148,59 @@ export function buildAisles(lines: ConsolidatedLine[], manual: ManualItem[]): Sh
     if (!items) return [];
     return [{ aisle, items: items.sort((a, b) => a.name.localeCompare(b.name, 'es')) }];
   });
+}
+
+/** Unidades permitidas en ítems manuales (todas menos "a gusto"). */
+export const MANUAL_UNITS = ['unidad', 'g', 'kg', 'ml', 'l', 'cda', 'cdta', 'taza'] as const;
+
+export const ManualItemInput = z
+  .object({
+    name: z.string().trim().min(1, 'Escribí qué querés comprar').max(60, 'Máximo 60 caracteres'),
+    qty: z.number().positive('Tiene que ser mayor a 0').optional(),
+    unit: z.enum(MANUAL_UNITS).optional(),
+    aisle: z.enum(AISLES).default('Otros'),
+  })
+  .refine((i) => (i.qty === undefined) === (i.unit === undefined), {
+    message: 'La cantidad y la unidad van juntas',
+    path: ['qty'],
+  });
+export type ManualItemData = z.infer<typeof ManualItemInput>;
+
+/** Ítems manuales de la semana, en orden de creación (id). */
+export function listManualItems(db: Db, userId: number, weekStart: string): ManualItem[] {
+  return db
+    .prepare(
+      'SELECT id, name, qty, unit, aisle FROM shopping_list_manual_items WHERE user_id = ? AND week_start = ? ORDER BY id',
+    )
+    .all(userId, weekStart) as ManualItem[];
+}
+
+export function addManualItem(
+  db: Db,
+  userId: number,
+  weekStart: string,
+  input: ManualItemData,
+): ManualItem {
+  const qty = input.qty ?? null;
+  const unit = input.unit ?? null;
+  const result = db
+    .prepare(
+      'INSERT INTO shopping_list_manual_items (user_id, week_start, name, qty, unit, aisle) VALUES (?, ?, ?, ?, ?, ?)',
+    )
+    .run(userId, weekStart, input.name, qty, unit, input.aisle);
+  return {
+    id: Number(result.lastInsertRowid),
+    name: input.name,
+    qty,
+    unit,
+    aisle: input.aisle,
+  };
+}
+
+/** true si borró; false si no existe o es de otro usuario. */
+export function deleteManualItem(db: Db, userId: number, id: number): boolean {
+  const result = db
+    .prepare('DELETE FROM shopping_list_manual_items WHERE id = ? AND user_id = ?')
+    .run(id, userId);
+  return result.changes === 1;
 }
