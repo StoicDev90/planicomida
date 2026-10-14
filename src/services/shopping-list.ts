@@ -1,5 +1,5 @@
 import { normalizeText } from '@/lib/text';
-import type { Aisle, Unit } from '@/services/recipes';
+import { AISLES, type Aisle, type Unit } from '@/services/recipes';
 
 /** Unidades después de pasar kg → g y l → ml. */
 export type BaseUnit = 'unidad' | 'g' | 'ml' | 'cda' | 'cdta' | 'taza' | 'a gusto';
@@ -63,4 +63,87 @@ export function consolidate(rows: IngredientRow[]): ConsolidatedLine[] {
     }
   }
   return [...map.values()];
+}
+
+export interface ShoppingItem {
+  key: string;
+  id?: number; // solo los manuales
+  name: string;
+  qty: number | null;
+  unit: string | null;
+  manual: boolean;
+}
+
+export interface ShoppingAisle {
+  aisle: Aisle;
+  items: ShoppingItem[];
+}
+
+export interface ShoppingList {
+  weekStart: string;
+  aisles: ShoppingAisle[];
+  customMeals: string[];
+}
+
+export interface ManualItem {
+  id: number;
+  name: string;
+  qty: number | null;
+  unit: string | null;
+  aisle: Aisle;
+}
+
+/** Redondea a 2 decimales: 1.005 → 1.01 no importa; 0.1 + 0.2 → 0.3. */
+export function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/** g ≥ 1000 → kg; ml ≥ 1000 → l; redondeo a 2 decimales. qty null queda null. */
+export function formatQty(
+  qty: number | null,
+  unit: BaseUnit,
+): { qty: number | null; unit: string } {
+  if (qty === null) return { qty: null, unit };
+  if (unit === 'g' && qty >= 1000) return { qty: round2(qty / 1000), unit: 'kg' };
+  if (unit === 'ml' && qty >= 1000) return { qty: round2(qty / 1000), unit: 'l' };
+  return { qty: round2(qty), unit };
+}
+
+export function manualToItem(item: ManualItem): ShoppingItem {
+  return {
+    key: `manual|${item.id}`,
+    id: item.id,
+    name: item.name,
+    qty: item.qty,
+    unit: item.unit,
+    manual: true,
+  };
+}
+
+/**
+ * Junta líneas de recetas (formateadas) y manuales por góndola.
+ * Góndolas en el orden de AISLES (sin las vacías); dentro de cada una, por nombre con localeCompare('es').
+ */
+export function buildAisles(lines: ConsolidatedLine[], manual: ManualItem[]): ShoppingAisle[] {
+  const byAisle = new Map<Aisle, ShoppingItem[]>();
+  const add = (aisle: Aisle, item: ShoppingItem) => {
+    const items = byAisle.get(aisle);
+    if (items) items.push(item);
+    else byAisle.set(aisle, [item]);
+  };
+  for (const line of lines) {
+    add(line.aisle, {
+      key: line.key,
+      name: line.name,
+      ...formatQty(line.qty, line.unit),
+      manual: false,
+    });
+  }
+  for (const item of manual) add(item.aisle, manualToItem(item));
+
+  return AISLES.flatMap((aisle) => {
+    const items = byAisle.get(aisle);
+    if (!items) return [];
+    return [{ aisle, items: items.sort((a, b) => a.name.localeCompare(b.name, 'es')) }];
+  });
 }
