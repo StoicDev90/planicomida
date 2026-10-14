@@ -49,7 +49,7 @@ No hace falta instalar ni configurar ninguna base de datos: SQLite crea el archi
 ## Puesta en marcha
 
 ```bash
-git clone <url-del-repositorio>
+git clone https://github.com/StoicDev90/planicomida.git
 cd planicomida
 npm install
 cp .env.example .env      # opcional: los valores por defecto ya funcionan
