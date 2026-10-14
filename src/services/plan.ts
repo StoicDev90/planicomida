@@ -1,6 +1,7 @@
 import { z } from 'astro/zod';
 import type { Db } from '@/lib/db';
 import { addWeeks, WeekStart } from '@/lib/week';
+import { canAssignRecipe } from '@/services/recipes';
 
 /** Orden de los turnos dentro del día. Mismos valores que recipes.category. */
 export const MEAL_TYPES = ['desayuno', 'almuerzo', 'snack', 'cena'] as const;
@@ -118,4 +119,43 @@ export function getRecipeIdsForWeek(db: Db, userId: number, weekStart: string): 
     )
     .pluck()
     .all(userId, weekStart);
+}
+
+/**
+ * Asigna una receta o una comida libre a un turno (reemplaza lo que hubiera).
+ * Receta que el usuario no puede asignar (de otro, borrada o inexistente) → { ok: false, error: 'RECIPE_NOT_FOUND' }.
+ */
+export function setMeal(
+  db: Db,
+  userId: number,
+  slot: Slot,
+  input: SetMealInput,
+): { ok: true; entry: PlanEntry } | { ok: false; error: 'RECIPE_NOT_FOUND' } {
+  const recipeId = 'recipeId' in input ? input.recipeId : null;
+  if (recipeId !== null && !canAssignRecipe(db, userId, recipeId)) {
+    return { ok: false, error: 'RECIPE_NOT_FOUND' };
+  }
+  db.prepare(
+    `INSERT INTO meal_plan_entries (user_id, week_start, day, meal_type, recipe_id, custom_meal_name)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT (user_id, week_start, day, meal_type) DO UPDATE SET
+  recipe_id = excluded.recipe_id,
+  custom_meal_name = excluded.custom_meal_name,
+  updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')`,
+  ).run(
+    userId,
+    slot.week,
+    slot.day,
+    slot.meal,
+    recipeId,
+    'customMealName' in input ? input.customMealName : null,
+  );
+  return { ok: true, entry: getEntry(db, userId, slot)! };
+}
+
+/** Vacía el turno. Si ya estaba vacío, no hace nada. */
+export function clearMeal(db: Db, userId: number, slot: Slot): void {
+  db.prepare(
+    'DELETE FROM meal_plan_entries WHERE user_id = ? AND week_start = ? AND day = ? AND meal_type = ?',
+  ).run(userId, slot.week, slot.day, slot.meal);
 }
