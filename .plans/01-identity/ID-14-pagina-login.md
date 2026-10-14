@@ -52,8 +52,8 @@ Markup: copiar el de `registro.astro` con estos cambios:
 npm run check
 npx vitest run
 # Servidor levantado; existe el usuario reg1@mail.com / 12345678 (lo creó la verificación de ID-13; si no, registrarlo):
-curl -s 'http://localhost:4321/login?next=/app/lista' | grep -c 'value="/app/lista"'          # 1
-curl -s 'http://localhost:4321/login?next=https://evil.com' | grep -c 'value="/app/planner"'  # 1
+curl -s 'http://localhost:4321/login?next=/app/lista' | grep -o 'value="/app/lista"' | wc -l          # 1
+curl -s 'http://localhost:4321/login?next=https://evil.com' | grep -o 'value="/app/planner"' | wc -l  # 1
 curl -s -i -X POST -H 'Origin: http://localhost:4321' \
   -d 'email=reg1@mail.com&password=12345678&next=/app/lista' http://localhost:4321/login | grep -iE '^(HTTP|location)'
 # → HTTP/1.1 303 y location: /app/lista

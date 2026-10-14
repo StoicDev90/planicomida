@@ -123,8 +123,8 @@ curl -s -i -X POST -H 'Origin: http://localhost:4321' \
 curl -s -i -X POST -H 'Origin: http://localhost:4321' \
   -d 'name=Reg&email=reg1@mail.com&password=12345678' http://localhost:4321/registro | grep -E '^HTTP|Ya hay una cuenta'
 # → HTTP/1.1 409 y el mensaje
-curl -s -i -X POST -H 'Origin: http://localhost:4321' -d 'name=&email=x&password=1' http://localhost:4321/registro | grep -c 'field-error'
-# → 3 o más
+curl -s -X POST -H 'Origin: http://localhost:4321' -d 'name=&email=x&password=1' http://localhost:4321/registro | grep -o 'id="[a-z]*-error"'
+# → name-error, email-error y password-error (uno por campo; la alerta general no lleva id)
 npm run build
 ```
 
