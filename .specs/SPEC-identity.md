@@ -66,13 +66,13 @@ CREATE INDEX sessions_user_id ON sessions(user_id);
 
 ## Success Criteria
 - [ ] Registrarse crea el usuario, deja una sesión iniciada y redirige a `/app/planner`.
-- [ ] Registrar un email ya existente (aunque cambien mayúsculas o espacios) → 409.
-- [ ] Contraseña o email incorrectos → 401 con el mismo mensaje en ambos casos.
-- [ ] La base de datos no tiene contraseñas ni tokens en texto plano (verificado en test).
-- [ ] `/app/planner` sin sesión → 302 a `/login?next=/app/planner`; después del login, vuelve a esa ruta.
-- [ ] `?next=https://evil.com` se ignora (redirige a `/app/planner`).
-- [ ] `/api/recipes` sin cookie → 401 con la forma de error común.
-- [ ] Logout invalida la sesión en el servidor: reusar la cookie vieja → 401.
+- [x] Registrar un email ya existente (aunque cambien mayúsculas o espacios) → 409.
+- [x] Contraseña o email incorrectos → 401 con el mismo mensaje en ambos casos.
+- [x] La base de datos no tiene contraseñas ni tokens en texto plano (verificado en test).
+- [x] `/app/planner` sin sesión → 302 a `/login?next=/app/planner`; después del login, vuelve a esa ruta.
+- [x] `?next=https://evil.com` se ignora (redirige a `/app/planner`).
+- [x] `/api/recipes` sin cookie → 401 con la forma de error común.
+- [x] Logout invalida la sesión en el servidor: reusar la cookie vieja → 401.
 - [ ] Una sesión vencida → 401 y la fila se borra.
 
 ## Fuera de alcance (v1)
