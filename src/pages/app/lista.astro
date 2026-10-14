@@ -255,3 +255,99 @@ const nextWeek = addWeeks(week, 1);
     </section>
   </main>
 </Layout>
+
+<style is:global>
+  #shopping-list .is-checked {
+    opacity: 0.55;
+  }
+  #shopping-list .is-checked [data-name] {
+    text-decoration: line-through;
+  }
+</style>
+
+<script>
+  import { loadChecked, saveChecked, type KeyValueStorage } from '@/lib/checked-store';
+
+  const root = document.querySelector<HTMLElement>('#shopping-list');
+  if (root) {
+    const userId = Number(root.dataset.user);
+    const week = root.dataset.week!;
+    let storage: KeyValueStorage | null = null;
+    try {
+      storage = window.localStorage;
+    } catch {
+      storage = null;
+    }
+    const checked = storage ? loadChecked(storage, userId, week) : new Set<string>();
+    const boxes = [...root.querySelectorAll<HTMLInputElement>('input[data-check]')];
+    const status = root.querySelector<HTMLElement>('[data-share-status]')!;
+
+    /** No tachados en su orden original; tachados al final. */
+    function reorder(list: Element) {
+      const items = [...list.children] as HTMLElement[];
+      items.sort(
+        (a, b) =>
+          Number(a.classList.contains('is-checked')) - Number(b.classList.contains('is-checked')) ||
+          Number(a.dataset.index) - Number(b.dataset.index),
+      );
+      list.append(...items);
+    }
+
+    function apply(box: HTMLInputElement) {
+      const item = box.closest<HTMLElement>('[data-item]')!;
+      item.classList.toggle('is-checked', box.checked);
+      reorder(item.parentElement!);
+    }
+
+    function persist() {
+      if (storage) saveChecked(storage, userId, week, checked);
+    }
+
+    boxes.forEach((box) => {
+      box.checked = checked.has(box.dataset.key!);
+      apply(box);
+      box.addEventListener('change', () => {
+        if (box.checked) checked.add(box.dataset.key!);
+        else checked.delete(box.dataset.key!);
+        persist();
+        apply(box);
+      });
+    });
+    // Keys tachadas que ya no están en la lista se olvidan.
+    for (const key of [...checked])
+      if (!boxes.some((b) => b.dataset.key === key)) checked.delete(key);
+    persist();
+
+    root.querySelector('[data-uncheck-all]')!.addEventListener('click', () => {
+      checked.clear();
+      persist();
+      boxes.forEach((box) => {
+        box.checked = false;
+        apply(box);
+      });
+    });
+
+    root.querySelector('[data-share]')!.addEventListener('click', async () => {
+      const text = root.dataset.shareText ?? '';
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'Lista del súper', text });
+          return;
+        }
+        await navigator.clipboard.writeText(text);
+        status.textContent = 'Lista copiada';
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') return; // cerró el diálogo de compartir
+        const area = document.createElement('textarea');
+        area.className = 'input mt-4 h-64';
+        area.readOnly = true;
+        area.value = text;
+        root.querySelector('[data-toolbar]')!.after(area);
+        area.select();
+        status.textContent = 'Copiá el texto de abajo';
+      }
+    });
+
+    root.querySelector<HTMLElement>('[data-toolbar]')!.hidden = false;
+  }
+</script>
